@@ -136,6 +136,9 @@ int main(void)
 		while (key = GetKeyPressed())
 			switch (key)
 			{
+				case KEY_W:
+					while (move(0, 1, 0));
+					break;
 				case KEY_A:
 					move(-1, 0, 0);
 					break;
