@@ -1,0 +1,9 @@
+*.pdb
+*.obj
+*.exe
+*.ilk
+*.rdbg
+*.lnk
+shell.bat
+
+raylib
