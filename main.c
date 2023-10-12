@@ -5,7 +5,7 @@
 
 #include "shape.c"
 
-int shape;
+int shape, next_shape;
 int x, y, r;
 #define SHAPE shapes[shape][r]
 
@@ -54,9 +54,15 @@ static bool move(int dx, int dy, int dr)
 	return true;
 }
 
+static int random_shape()
+{
+	return GetRandomValue(0, N_SHAPES - 1);
+}
+
 static bool spawn_shape()
 {
-	shape = GetRandomValue(0, N_SHAPES - 1);
+	shape = next_shape;
+	next_shape = random_shape();
 	x = 4;
 	y = 0;
 	r = 0;
@@ -100,6 +106,7 @@ int main(void)
 	InitWindow(800, 600, "tetris ai");
 	SetTargetFPS(60);
 
+	next_shape = random_shape();
 	bool running = true;
 	bool spawn = true;
 	int last_drop = 0;
@@ -157,7 +164,7 @@ render:
 		// next box
 		for (int i = 0; i < 4; ++i)
 			for (int j = 0; j < 4; ++j)
-				draw_cell(j + WIDTH + 1, i, shapes[5][3][i][j]);
+				draw_cell(j + WIDTH + 1, i, shapes[next_shape][0][i][j]);
 		// current shape
 		for (int i = 0; i < 4; ++i)
 			for (int j = 0; j < 4; ++j)
