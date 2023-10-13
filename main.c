@@ -12,6 +12,7 @@ int x, y, r;
 		
 int lines = 69;
 int level = 6;
+int score = 0;
 
 bool spawn = true;
 
@@ -81,11 +82,17 @@ static bool row(int i)
 	return true;
 }
 
+static int points_per_line[] = { 40, 100, 300, 1200, };
 static void clear(void)
 {
 	bool clears[HEIGHT];
+	int l = 0;
 	for (int i = 0; i < HEIGHT; ++i)
-		clears[i] = row(i);
+	{
+		l += clears[i] = row(i);
+	}
+
+	score += points_per_line[l] * (level + 1);
 
 	for (int i = HEIGHT - 1, k = 0; i >= 0; --i)
 	{
@@ -190,11 +197,11 @@ render:
 					draw_cell(x + j, y + i, SHAPE[i][j]);
 		
 		// debug
-		DrawText(TextFormat("running:\t%s\npos:\t%d %d %d\ndas:\t%d\ndir:\t%d\nlevel:\t%d\nlines:\t%d",
+		DrawText(TextFormat("running:\t%s\npos:\t%d %d %d\ndas:\t%d\ndir:\t%d\nlevel:\t%d\nlines:\t%d\nscore:\t%d",
 		                    running ? "true" : "false",
 		                    x, y, r,
 		                    das, dir,
-		                    level, lines),
+		                    level, lines, score),
 		         400, 10, 20, ORANGE);
 
 		for (int k = 0; k < N_SHAPES; ++k)
