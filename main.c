@@ -4,10 +4,14 @@
 #define WIDTH 10
 
 #include "shape.c"
+#include "levels.c"
 
 int shape, next_shape;
 int x, y, r;
 #define SHAPE shapes[shape][r]
+		
+int lines = 0;
+int level = 19;
 
 int board[HEIGHT][WIDTH];
 
@@ -74,6 +78,8 @@ static bool row(int i)
 	for (int j = 0; j < WIDTH; ++j)
 		if (!board[i][j])
 			return false;
+	++lines;
+	level += lines % 10 == 0;
 	return true;
 }
 
@@ -124,7 +130,7 @@ int main(void)
 			running &= spawn_shape(&x, &y);
 			spawn = false;
 		}
-		if (frames - last_drop == 12)
+		if (frames - last_drop == drop_speed(level))
 		{
 			if (!move(0, 1, 0))
 			{
@@ -174,11 +180,12 @@ render:
 					draw_cell(x + j, y + i, SHAPE[i][j]);
 		
 		// debug
-		DrawText(TextFormat("running:\t%s\npos:\t%d %d %d\ndas:\t%d\ndir:\t%d",
+		DrawText(TextFormat("running:\t%s\npos:\t%d %d %d\ndas:\t%d\ndir:\t%d\nlevel:\t%d\nlines:\t%d",
 		                    running ? "true" : "false",
 		                    x, y, r,
-		                    das, dir),
-		         400, 100, 20, ORANGE);
+		                    das, dir,
+		                    level, lines),
+		         400, 10, 20, ORANGE);
 
 		for (int k = 0; k < N_SHAPES; ++k)
 			for (int i = 0; i < 4; ++i)
