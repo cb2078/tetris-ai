@@ -111,6 +111,8 @@ int main(void)
 	bool spawn = true;
 	int last_drop = 0;
 	int frames = 0;
+	int das = 0;
+	int last_dir = 0;
 
 	while (!WindowShouldClose())
 	{
@@ -131,30 +133,20 @@ int main(void)
 			last_drop = frames;
 		}
 
-		// TODO: DAS
-		int key;
-		while (key = GetKeyPressed())
-			switch (key)
-			{
-				case KEY_W:
-					while (move(0, 1, 0));
-					break;
-				case KEY_A:
-					move(-1, 0, 0);
-					break;
-				case KEY_S:
-					move(0, 1, 0);
-					break;
-				case KEY_D:
-					move(1, 0, 0);
-					break;
-				case KEY_Q:
-					move(0, 0, 1);
-					break;
-				case KEY_E:
-					move(0, 0, -1);
-					break;
-			}
+		int dir = IsKeyDown(KEY_LEFT) ? -1 : IsKeyDown(KEY_RIGHT) ? 1 : 0;
+		das = dir == 0 ? 0 : dir == last_dir ? das + 1 : 1;
+		last_dir = dir;
+		if (das == 1 || das > 16 && das % 6 == 5)
+			move(dir, 0, 0);
+		
+		if (IsKeyDown(KEY_DOWN))
+			move(0, 1, 0);
+		if (IsKeyPressed(KEY_UP))
+			while (move(0, 1, 0));
+		if (IsKeyPressed(KEY_Q))
+			move(0, 0, 1);
+		if (IsKeyPressed(KEY_E))
+			move(0, 0, -1);
 
 render:
 		BeginDrawing();
@@ -175,9 +167,10 @@ render:
 					draw_cell(x + j, y + i, SHAPE[i][j]);
 		
 		// debug
-		DrawText(TextFormat("running:\t%s\npos:\t%d %d %d",
+		DrawText(TextFormat("running:\t%s\npos:\t%d %d %d\ndas:\t%d\ndir:\t%d",
 		                    running ? "true" : "false",
-		                    x, y, r),
+		                    x, y, r,
+		                    das, dir),
 		         400, 100, 20, ORANGE);
 
 		for (int k = 0; k < N_SHAPES; ++k)
