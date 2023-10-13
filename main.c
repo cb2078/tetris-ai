@@ -13,6 +13,8 @@ int x, y, r;
 int lines = 69;
 int level = 6;
 
+bool spawn = true;
+
 int board[HEIGHT][WIDTH];
 
 static void draw_cell(int x, int y, int c)
@@ -46,16 +48,6 @@ static bool collides(int x, int y, int r)
 				return true;
 		}
 	return false;
-}
-
-static bool move(int dx, int dy, int dr)
-{
-	if (collides(x + dx, y + dy, (r + dr) % 4))
-		return false;
-	x += dx;
-	y += dy;
-	r = (r + dr + 4) % 4;
-	return true;
 }
 
 static int random_shape()
@@ -113,6 +105,23 @@ static void write()
 	clear();
 }
 
+static bool move(int dx, int dy, int dr)
+{
+	if (collides(x + dx, y + dy, (r + dr) % 4))
+	{
+		if (dy)
+		{
+			write();
+			spawn = true;
+		}
+		return false;
+	}
+	x += dx;
+	y += dy;
+	r = (r + dr + 4) % 4;
+	return true;
+}
+
 int main(void)
 {
 	InitWindow(800, 600, "tetris ai");
@@ -120,7 +129,6 @@ int main(void)
 
 	next_shape = random_shape();
 	bool running = true;
-	bool spawn = true;
 	int last_drop = 0;
 	int frames = 0;
 	int das = 0;
@@ -138,11 +146,7 @@ int main(void)
 		}
 		if (frames - last_drop == drop_speed(level))
 		{
-			if (!move(0, 1, 0))
-			{
-				write();
-				spawn = true;
-			}
+			move(0, 1, 0);
 			last_drop = frames;
 		}
 
