@@ -113,6 +113,7 @@ int main(void)
 	int frames = 0;
 	int das = 0;
 	int last_dir = 0;
+	int soft = 0;
 
 	while (!WindowShouldClose())
 	{
@@ -123,7 +124,7 @@ int main(void)
 			running &= spawn_shape(&x, &y);
 			spawn = false;
 		}
-		if (frames - last_drop == 15)
+		if (frames - last_drop == 12)
 		{
 			if (!move(0, 1, 0))
 			{
@@ -140,7 +141,13 @@ int main(void)
 			move(dir, 0, 0);
 		
 		if (IsKeyDown(KEY_DOWN))
-			move(0, 1, 0);
+		{
+			++soft;
+			if (soft % 3 == 0)
+				move(0, 1, 0);
+		}
+		else
+			soft = 0;
 		if (IsKeyPressed(KEY_UP))
 			while (move(0, 1, 0));
 		if (IsKeyPressed(KEY_Q))
