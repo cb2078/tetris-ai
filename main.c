@@ -10,8 +10,8 @@ int shape, next_shape;
 int x, y, r;
 #define SHAPE shapes[shape][r]
 		
-int lines = 0;
-int level = 19;
+int lines = 69;
+int level = 6;
 
 int board[HEIGHT][WIDTH];
 
@@ -73,13 +73,19 @@ static bool spawn_shape()
 	return !collides(x, y, r);
 }
 
+static void inc_level()
+{
+	if (lines >= level * 10 + 10 || lines >= 100 && lines >= level * 10 - 50)
+		level += lines % 10 == 0;
+}
+
 static bool row(int i)
 {
 	for (int j = 0; j < WIDTH; ++j)
 		if (!board[i][j])
 			return false;
 	++lines;
-	level += lines % 10 == 0;
+	inc_level();
 	return true;
 }
 
