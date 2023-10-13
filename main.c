@@ -50,12 +50,12 @@ static bool collides(int x, int y, int r)
 	return false;
 }
 
-static int random_shape()
+static int random_shape(void)
 {
 	return GetRandomValue(0, N_SHAPES - 1);
 }
 
-static bool spawn_shape()
+static bool spawn_shape(void)
 {
 	shape = next_shape;
 	next_shape = random_shape();
@@ -65,7 +65,7 @@ static bool spawn_shape()
 	return !collides(x, y, r);
 }
 
-static void inc_level()
+static void inc_level(void)
 {
 	if (lines >= level * 10 + 10 || lines >= 100 && lines >= level * 10 - 50)
 		level += lines % 10 == 0;
@@ -81,7 +81,7 @@ static bool row(int i)
 	return true;
 }
 
-static void clear()
+static void clear(void)
 {
 	bool clears[HEIGHT];
 	for (int i = 0; i < HEIGHT; ++i)
@@ -96,7 +96,7 @@ static void clear()
 	}
 }
 
-static void write()
+static void write(void)
 {
 	for (int i = 0; i < 4; ++i)
 		for (int j = 0; j < 4; ++j)
@@ -141,7 +141,7 @@ int main(void)
 			goto render;
 		if (spawn)
 		{
-			running &= spawn_shape(&x, &y);
+			running &= spawn_shape();
 			spawn = false;
 		}
 		if (frames - last_drop == drop_speed(level))
