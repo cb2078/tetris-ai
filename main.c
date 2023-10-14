@@ -27,8 +27,8 @@ static void draw_cell(int x, int y, int c)
 		YELLOW,
 		GREEN,
 		BLUE,
-		PURPLE,
-		VIOLET,
+		SKYBLUE,
+		PINK,
 	};
 	static int width = 20;
 	static int boarder = 1;
