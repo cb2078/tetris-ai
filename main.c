@@ -83,7 +83,7 @@ static bool row(int i)
 	return true;
 }
 
-static int points_per_line[] = { 40, 100, 300, 1200, };
+static int points_per_line[] = { 0, 40, 100, 300, 1200, };
 static void clear(void)
 {
 	bool clears[HEIGHT];
