@@ -20,7 +20,7 @@ int board[HEIGHT][WIDTH];
 
 static void draw_cell(int x, int y, int c)
 {
-	Color colours[N_SHAPES + 1] = {
+	Color colours[] = {
 		DARKGRAY,
 		RED,
 		ORANGE,
@@ -29,6 +29,7 @@ static void draw_cell(int x, int y, int c)
 		BLUE,
 		SKYBLUE,
 		PINK,
+		GRAY,
 	};
 	static int width = 20;
 	static int boarder = 1;
@@ -190,6 +191,16 @@ render:
 		for (int i = 0; i < 4; ++i)
 			for (int j = 0; j < 4; ++j)
 				draw_cell(j + WIDTH + 1, i, shapes[next_shape][0][i][j]);
+		// current shape shadow
+		{
+			int k = y;
+			while (k < HEIGHT - 1 && !collides(x, 1 + k, r))
+				++k;
+			for (int i = 0; i < 4; ++i)
+				for (int j = 0; j < 4; ++j)
+					if (SHAPE[i][j])
+						draw_cell(x + j, k + i, N_SHAPES + 1);
+		}
 		// current shape
 		for (int i = 0; i < 4; ++i)
 			for (int j = 0; j < 4; ++j)
