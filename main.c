@@ -167,8 +167,11 @@ int main(void)
 		if (IsKeyDown(KEY_DOWN))
 		{
 			++soft;
-			if (soft % 3 == 0)
+			if (soft % 3 == 1)
+			{
 				move(0, 1, 0);
+				++score;
+			}
 		}
 		else
 			soft = 0;
