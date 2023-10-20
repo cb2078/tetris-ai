@@ -138,7 +138,6 @@ int main(void)
 
 	next_shape = random_shape();
 	bool running = true;
-	int last_drop = 0;
 	int frames = 0;
 	int das = 0;
 	int last_dir = 0;
@@ -152,12 +151,10 @@ int main(void)
 		{
 			running &= spawn_shape();
 			spawn = false;
+			frames = 0;
 		}
-		if (frames - last_drop == drop_speed(level))
-		{
+		if (0 == frames)
 			move(0, 1, 0);
-			last_drop = frames;
-		}
 
 		int dir = IsKeyDown(KEY_LEFT) ? -1 : IsKeyDown(KEY_RIGHT) ? 1 : 0;
 		das = dir == 0 ? 0 : dir == last_dir ? das + 1 : 1;
@@ -226,6 +223,7 @@ render:
 		EndDrawing();
 		
 		++frames;
+		frames %= drop_speed(level);
 	}
 	return 0;
 }
