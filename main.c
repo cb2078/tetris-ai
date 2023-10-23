@@ -37,8 +37,7 @@ static void draw_cell(int x, int y, int c)
 	};
 	static int width = 20;
 	static int boarder = 1;
-	static int offset = 1;
-	DrawRectangle((x + offset) * (width + boarder), (y + offset) * (width + boarder), width, width, colours[c]);
+	DrawRectangle((x + 1) * (width + boarder), (y - 1) * (width + boarder), width, width, colours[c]);
 }
 
 static bool collides(int x, int y, int r)
@@ -273,13 +272,13 @@ int main(void)
 		ClearBackground(BLACK);
 		
 		// board
-		for (int i = 0; i < HEIGHT; ++i)
+		for (int i = 2; i < HEIGHT; ++i)
 			for (int j = 0; j < WIDTH; ++j)
 				draw_cell(j, i, board[i][j]);
 		// next box
 		for (int i = 0; i < 4; ++i)
 			for (int j = 0; j < 4; ++j)
-				draw_cell(j + WIDTH + 1, i, shapes[next_shape][0][i][j]);
+				draw_cell(j + WIDTH + 1, i + 2, shapes[next_shape][0][i][j]);
 		// current shape shadow
 		{
 			int k = y;
