@@ -196,11 +196,7 @@ static void advance(int input)
 		gravity = level >= 19 ? 1 : 2;
 	}
 	else
-	{
-		if (old_input & DOWN)
-			frames = 1;
 		gravity = drop_speed(level);
-	}
 	if (0 == frames)
 		move(0, 1, 0);
 	
