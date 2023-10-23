@@ -10,13 +10,15 @@ int shape, next_shape;
 int x, y, r;
 #define SHAPE shapes[shape][r]
 		
-int lines = 69;
-int level = 6;
+int lines = 0;
+int level = 15;
 int score = 0;
 
 bool spawn = true;
 int are = 0;
 int clear_delay = 0;
+
+static int das = 16;
 
 int board[HEIGHT][WIDTH];
 
@@ -159,7 +161,6 @@ static void advance(int input)
 	static bool running = true;
 	static int frames = 0;
 	static int old_input = 0;
-	static int das = 16;
 
 	if (!running)
 		return;
@@ -300,11 +301,14 @@ int main(void)
 		                    x, y, r,
 		                    level, lines, score),
 		         400, 10, 20, ORANGE);
-
 		for (int k = 0; k < N_SHAPES; ++k)
 			for (int i = 0; i < 4; ++i)
 				for (int j = 0; j < 4; ++j)
 					draw_cell(WIDTH + 1 + k % 4 * 5 + j, 13 + i + k / 4 * 5, shapes[k][0][i][j]);
+		// das counter
+		for (int i = 0; i <= 16; ++i)
+			draw_cell(i, 23, i <= das ? 4 : 0);
+		DrawText(TextFormat("das: %d", das), 21, 525, 20, ORANGE);
 		EndDrawing();
 	}
 	return 0;
