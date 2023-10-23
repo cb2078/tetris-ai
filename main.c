@@ -15,6 +15,8 @@ int level = 6;
 int score = 0;
 
 bool spawn = true;
+int are = 0;
+int clear_delay = 0;
 
 int board[HEIGHT][WIDTH];
 
@@ -102,6 +104,11 @@ static void clear(void)
 		for (int j = 0; j < WIDTH; ++j)
 			board[i][j] = i - k < 0 ? 0 : board[i - k][j];
 	}
+
+	// ARE
+	int b = 21 - (y + bottom(shape, r));
+	are = (b + 2) / 4 * 2 + 10;
+	clear_delay = l ? 20 : 0;
 }
 
 static void write(void)
@@ -155,7 +162,17 @@ static void advance(int input)
 	static int das = 16;
 
 	if (!running)
-		return;;
+		return;
+	if (are)
+	{
+		--are;
+		return;
+	}
+	if (clear_delay)
+	{
+		--clear_delay;
+		return;
+	}
 
 	if (spawn)
 	{

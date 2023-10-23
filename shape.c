@@ -192,3 +192,12 @@ int shapes[N_SHAPES][4][4][4] =
 		},
 	},
 };
+
+int bottom(int shape, int r)
+{
+	for (int i = 3; i > 0; --i)
+		for (int j = 0; j < 4; ++j)
+			if (shapes[shape][r][i][j])
+				return i;
+	return 0;
+}
