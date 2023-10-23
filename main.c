@@ -130,6 +130,76 @@ static bool move(int dx, int dy, int dr)
 	return true;
 }
 
+typedef enum Input Input;
+enum Input {
+	UP	= 0x01,
+	DOWN	= 0x02,
+	LEFT	= 0x04,
+	RIGHT	= 0x08,
+	ROT_ACW	= 0x10,
+	ROT_CW	= 0x20,
+};
+#define NUM_INPUTS 6
+
+// advance the game by one frame
+static void advance(int input)
+{
+	static int old_input = 0;
+	static int soft = 3;
+	static int das = 16;
+
+	// hard drop
+	if (input & ~old_input & UP)
+		while (move(0, 1, 0));
+	
+	// soft drop
+	if (input & DOWN)
+		switch (soft) {
+			case 0:
+				soft = 3;
+				move(0, 1, 0);
+			default:
+				--soft;
+		}
+	else
+		soft = 3;
+	
+	// move left / right
+	switch (input & (LEFT | RIGHT)) {
+		case LEFT:
+			int dir = -1;
+			goto move;
+		case RIGHT:
+			dir = 1;
+move:
+			switch (das) {
+				case 0:
+					das = 6;
+				case 16:
+					move(dir, 0, 0);
+				default:
+					--das;
+					break;
+			}
+			break;
+		default:
+			das = 16;
+			break;
+	}
+
+	// rotate clockwise / anti clockwise
+	switch (input & ~old_input & (ROT_CW | ROT_ACW)) {
+		case ROT_CW:
+			move(0, 0, -1);
+			break;
+		case ROT_ACW:
+			move(0, 0, 1);
+			break;
+	}
+
+	old_input = input;
+}
+
 int main(void)
 {
 	InitWindow(800, 600, "tetris ai");
@@ -138,9 +208,16 @@ int main(void)
 	next_shape = random_shape();
 	bool running = true;
 	int frames = 0;
-	int das = 0;
-	int last_dir = 0;
-	int soft = 0;
+
+	// keybinds are here
+	static int keys[NUM_INPUTS] = {
+		KEY_UP,
+		KEY_DOWN,
+		KEY_LEFT,
+		KEY_RIGHT,
+		KEY_Q,
+		KEY_E,
+	};
 
 	while (!WindowShouldClose())
 	{
@@ -152,32 +229,16 @@ int main(void)
 			spawn = false;
 			frames = 0;
 		}
+		// TODO this shouldn't happen if we're soft dropping
 		if (0 == frames)
 			move(0, 1, 0);
 
-		int dir = IsKeyDown(KEY_LEFT) ? -1 : IsKeyDown(KEY_RIGHT) ? 1 : 0;
-		das = dir == 0 ? 0 : dir == last_dir ? das + 1 : 1;
-		last_dir = dir;
-		if (das == 1 || das > 16 && das % 6 == 5)
-			move(dir, 0, 0);
-		
-		if (IsKeyDown(KEY_DOWN))
-		{
-			++soft;
-			if (soft % 3 == 1)
-			{
-				move(0, 1, 0);
-				++score;
-			}
-		}
-		else
-			soft = 0;
-		if (IsKeyPressed(KEY_UP))
-			while (move(0, 1, 0));
-		if (IsKeyPressed(KEY_Q))
-			move(0, 0, 1);
-		if (IsKeyPressed(KEY_E))
-			move(0, 0, -1);
+		// keyboard events
+		int input = 0;
+		for (int i = 0; i < NUM_INPUTS; ++i)
+			if (IsKeyDown(keys[i]))
+				input |= 1 << i;
+		advance(input);
 
 render:
 		BeginDrawing();
@@ -208,10 +269,9 @@ render:
 					draw_cell(x + j, y + i, SHAPE[i][j]);
 		
 		// debug
-		DrawText(TextFormat("running:\t%s\npos:\t%d %d %d\ndas:\t%d\ndir:\t%d\nlevel:\t%d\nlines:\t%d\nscore:\t%d",
+		DrawText(TextFormat("running:\t%s\npos:\t%d %d %d\nlevel:\t%d\nlines:\t%d\nscore:\t%d",
 		                    running ? "true" : "false",
 		                    x, y, r,
-		                    das, dir,
 		                    level, lines, score),
 		         400, 10, 20, ORANGE);
 
