@@ -193,7 +193,7 @@ static void advance(int input)
 		// TODO points for soft drop
 		if (~old_input & DOWN)
 			frames = 0;
-		gravity = level >= 19 ? 1 : 3;
+		gravity = level >= 19 ? 1 : 2;
 	}
 	else
 	{
