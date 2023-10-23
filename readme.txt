@@ -1,4 +1,6 @@
-Tweaks to the implementation to make it more similar to the nes game
+Tweaks to the implementation to make it more similar to the nes game.  Firstly,
+DAS should only be lost when pressing left / right again.  Also wall charges
+need to be implemented.
 
 Write a search function to find all the placements given a shape.  BFS should
 be sufficient for now.  Depends on a hash table for remembering visited
