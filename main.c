@@ -151,9 +151,7 @@ static void advance(int input)
 {
 	static bool running = true;
 	static int frames = 0;
-
 	static int old_input = 0;
-	static int soft = 3;
 	static int das = 16;
 
 	if (!running)
@@ -166,25 +164,28 @@ static void advance(int input)
 		frames = 0;
 	}
 	
-	// TODO this shouldn't happen if we're soft dropping
-	if (0 == frames)
-		move(0, 1, 0);
-
 	// hard drop
 	if (input & ~old_input & UP)
 		while (move(0, 1, 0));
 	
-	// soft drop
+	// TODO don't continue the soft drop after placing a shape
+	int gravity;
 	if (input & DOWN)
-		switch (soft) {
-			case 0:
-				soft = 3;
-				move(0, 1, 0);
-			default:
-				--soft;
-		}
+	{
+		// soft drop
+		// TODO points for soft drop
+		if (~old_input & DOWN)
+			frames = 0;
+		gravity = level >= 19 ? 1 : 3;
+	}
 	else
-		soft = 3;
+	{
+		if (old_input & DOWN)
+			frames = 1;
+		gravity = drop_speed(level);
+	}
+	if (0 == frames)
+		move(0, 1, 0);
 	
 	// move left / right
 	switch (input & (LEFT | RIGHT)) {
@@ -220,7 +221,7 @@ move:
 	}
 
 	old_input = input;
-	frames = (1 + frames) % drop_speed(level);
+	frames = (1 + frames) % gravity;
 }
 
 int main(void)
