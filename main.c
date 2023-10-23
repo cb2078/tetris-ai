@@ -130,7 +130,6 @@ static bool move(int dx, int dy, int dr)
 	return true;
 }
 
-#define main WinMain
 int main(void)
 {
 	InitWindow(800, 600, "tetris ai");
