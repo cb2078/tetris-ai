@@ -141,12 +141,34 @@ enum Input {
 };
 #define NUM_INPUTS 6
 
+static void init()
+{
+	next_shape = random_shape();
+}
+
 // advance the game by one frame
 static void advance(int input)
 {
+	static bool running = true;
+	static int frames = 0;
+
 	static int old_input = 0;
 	static int soft = 3;
 	static int das = 16;
+
+	if (!running)
+		return;;
+
+	if (spawn)
+	{
+		running &= spawn_shape();
+		spawn = false;
+		frames = 0;
+	}
+	
+	// TODO this shouldn't happen if we're soft dropping
+	if (0 == frames)
+		move(0, 1, 0);
 
 	// hard drop
 	if (input & ~old_input & UP)
@@ -198,16 +220,13 @@ move:
 	}
 
 	old_input = input;
+	frames = (1 + frames) % drop_speed(level);
 }
 
 int main(void)
 {
 	InitWindow(800, 600, "tetris ai");
 	SetTargetFPS(60);
-
-	next_shape = random_shape();
-	bool running = true;
-	int frames = 0;
 
 	// keybinds are here
 	static int keys[NUM_INPUTS] = {
@@ -219,28 +238,18 @@ int main(void)
 		KEY_E,
 	};
 
+	init();
+
 	while (!WindowShouldClose())
 	{
-		if (!running)
-			goto render;
-		if (spawn)
-		{
-			running &= spawn_shape();
-			spawn = false;
-			frames = 0;
-		}
-		// TODO this shouldn't happen if we're soft dropping
-		if (0 == frames)
-			move(0, 1, 0);
-
 		// keyboard events
 		int input = 0;
 		for (int i = 0; i < NUM_INPUTS; ++i)
 			if (IsKeyDown(keys[i]))
 				input |= 1 << i;
+		
 		advance(input);
 
-render:
 		BeginDrawing();
 		ClearBackground(BLACK);
 		
@@ -269,8 +278,7 @@ render:
 					draw_cell(x + j, y + i, SHAPE[i][j]);
 		
 		// debug
-		DrawText(TextFormat("running:\t%s\npos:\t%d %d %d\nlevel:\t%d\nlines:\t%d\nscore:\t%d",
-		                    running ? "true" : "false",
+		DrawText(TextFormat("pos:\t%d %d %d\nlevel:\t%d\nlines:\t%d\nscore:\t%d",
 		                    x, y, r,
 		                    level, lines, score),
 		         400, 10, 20, ORANGE);
@@ -280,9 +288,6 @@ render:
 				for (int j = 0; j < 4; ++j)
 					draw_cell(WIDTH + 1 + k % 4 * 5 + j, 13 + i + k / 4 * 5, shapes[k][0][i][j]);
 		EndDrawing();
-		
-		++frames;
-		frames %= drop_speed(level);
 	}
 	return 0;
 }
