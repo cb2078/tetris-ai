@@ -162,6 +162,7 @@ static void advance(int input)
 	static bool running = true;
 	static int frames = 0;
 	static int old_input = 0;
+	static int soft = 0;
 
 	if (!running)
 		return;
@@ -183,28 +184,48 @@ static void advance(int input)
 		frames = 0;
 	}
 	
+	// rotate clockwise / anti clockwise
+	switch (input & ~old_input & (ROT_CW | ROT_ACW)) {
+		case ROT_CW:
+			move(0, 0, -1);
+			break;
+		case ROT_ACW:
+			move(0, 0, 1);
+			break;
+	}
+	
 	// hard drop
 	if (input & ~old_input & UP)
 		while (move(0, 1, 0));
 	
-	// TODO don't continue the soft drop after placing a shape
-	// TODO soft drop shouldn't happen at the same time as moving left / right
-	int gravity;
+	// soft drop
 	if (input & DOWN)
 	{
-		// soft drop
-		// TODO points for soft drop
-		if (~old_input & DOWN)
-			frames = 0;
-		gravity = level >= 19 ? 1 : 2;
+		++soft;
+		if (3 == soft)
+		{
+			soft = 1;
+			move(0, 1, 0);
+		}
+		return;
+	}
+	else  if (old_input & DOWN)
+	{
+		frames = soft;
+		soft = 0;
+	}
+	
+	// gravity
+	if (drop_speed(level) <= frames)
+	{
+		frames = 0;
+		move(0, 1, 0);
 	}
 	else
-		gravity = drop_speed(level);
-	if (0 == frames)
-		move(0, 1, 0);
+		++frames;
 	
-	// move left / right
 	int dir = input & RIGHT ? 1 : input & LEFT ? -1 : 0;
+	// move left / right
 	if (dir)
 		if (input & ~old_input & (LEFT | RIGHT))
 		{
@@ -216,19 +237,8 @@ static void advance(int input)
 			das = 10;
 			move(dir, 0, 0);
 		}
-
-	// rotate clockwise / anti clockwise
-	switch (input & ~old_input & (ROT_CW | ROT_ACW)) {
-		case ROT_CW:
-			move(0, 0, -1);
-			break;
-		case ROT_ACW:
-			move(0, 0, 1);
-			break;
-	}
-
+	
 	old_input = input;
-	frames = (1 + frames) % gravity;
 }
 
 int main(void)
