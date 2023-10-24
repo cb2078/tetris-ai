@@ -18,7 +18,7 @@ bool spawn = true;
 int are = 0;
 int clear_delay = 0;
 
-static int das = 16;
+static int das = 0;
 
 int board[HEIGHT][WIDTH];
 
@@ -186,6 +186,7 @@ static void advance(int input)
 		while (move(0, 1, 0));
 	
 	// TODO don't continue the soft drop after placing a shape
+	// TODO soft drop shouldn't happen at the same time as moving left / right
 	int gravity;
 	if (input & DOWN)
 	{
@@ -201,27 +202,18 @@ static void advance(int input)
 		move(0, 1, 0);
 	
 	// move left / right
-	switch (input & (LEFT | RIGHT)) {
-		case LEFT:
-			int dir = -1;
-			goto move;
-		case RIGHT:
-			dir = 1;
-move:
-			switch (das) {
-				case 0:
-					das = 6;
-				case 16:
-					move(dir, 0, 0);
-				default:
-					--das;
-					break;
-			}
-			break;
-		default:
-			das = 16;
-			break;
-	}
+	int dir = input & RIGHT ? 1 : input & LEFT ? -1 : 0;
+	if (dir)
+		if (input & ~old_input & (LEFT | RIGHT) == (LEFT | RIGHT))
+		{
+			das = 0;
+			move(dir, 0, 0);
+		}
+		else if (16 == ++das)
+		{
+			das = 10;
+			move(dir, 0, 0);
+		}
 
 	// rotate clockwise / anti clockwise
 	switch (input & ~old_input & (ROT_CW | ROT_ACW)) {
@@ -302,7 +294,7 @@ int main(void)
 					draw_cell(WIDTH + 1 + k % 4 * 5 + j, 13 + i + k / 4 * 5, shapes[k][0][i][j]);
 		// das counter
 		for (int i = 0; i <= 16; ++i)
-			draw_cell(i, 23, i <= das ? 4 : 0);
+			draw_cell(i, 23, i > das ? 0 : das < 10 ? 1 : 4);
 		DrawText(TextFormat("das: %d", das), 21, 525, 20, ORANGE);
 		EndDrawing();
 	}
