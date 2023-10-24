@@ -13,6 +13,7 @@ int x, y, r;
 int lines = 0;
 int level = 15;
 int score = 0;
+int soft_score = 0;
 
 bool spawn = true;
 int are = 0;
@@ -96,7 +97,8 @@ static void clear(void)
 		l += clears[i] = row(i);
 	}
 
-	score += points_per_line[l] * (level + 1);
+	score += points_per_line[l] * (level + 1) + soft_score;
+	soft_score = 0;
 
 	for (int i = HEIGHT - 1, k = 0; i >= 0; --i)
 	{
@@ -205,6 +207,7 @@ static void advance(int input)
 		if (3 == soft)
 		{
 			soft = 1;
+			++soft_score;
 			move(0, 1, 0);
 		}
 		return;
@@ -213,6 +216,7 @@ static void advance(int input)
 	{
 		frames = soft;
 		soft = 0;
+		soft_score = 0;
 	}
 	
 	// gravity

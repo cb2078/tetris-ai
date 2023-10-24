@@ -1,4 +1,4 @@
-Tweaks to the implementation to make it more similar to the nes game.
+Add correct RNG for peice generation
 
 Write a search function to find all the placements given a shape.  BFS should
 be sufficient for now.  Depends on a hash table for remembering visited
