@@ -1,5 +1,3 @@
-Add correct RNG for peice generation
-
 Write a search function to find all the placements given a shape.  BFS should
 be sufficient for now.  Depends on a hash table for remembering visited
 positions and a queue for possible positions.

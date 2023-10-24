@@ -56,9 +56,31 @@ static bool collides(int x, int y, int r)
 	return false;
 }
 
+static unsigned short random_int(void)
+{
+	static unsigned short seed = 2;
+	int x = (1 << 9) & seed;
+	int y = (1 << 1) & seed;
+	int left = x | y;
+	return left << 15 | seed >> 1;
+}
+
 static int random_shape(void)
 {
-	return GetRandomValue(0, N_SHAPES - 1);
+	static int shapes = 0;
+	static int spawn_id[N_SHAPES] = { 0x12, 0x0a, 0x0b, 0x08, 0x07, 0x0e, 0x02, };
+	
+	unsigned char i = random_int() >> 8; 
+	i += ++shapes;
+	i &= 7;
+	if (7 == i || i == shape)
+	{
+		i = random_int() >> 8;
+		i &= 7;
+		i += shape;
+		i %= 7;
+	}
+	return i;
 }
 
 static bool spawn_shape(void)
@@ -178,6 +200,8 @@ static void advance(int input)
 		--clear_delay;
 		return;
 	}
+
+	random_int();
 
 	if (spawn)
 	{
