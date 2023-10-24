@@ -1,5 +1,4 @@
-Tweaks to the implementation to make it more similar to the nes game.  This
-includes adding wall charges.
+Tweaks to the implementation to make it more similar to the nes game.
 
 Write a search function to find all the placements given a shape.  BFS should
 be sufficient for now.  Depends on a hash table for remembering visited

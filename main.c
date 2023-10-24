@@ -125,6 +125,8 @@ static bool move(int dx, int dy, int dr)
 {
 	if (collides(x + dx, y + dy, (r + dr) % 4))
 	{
+		if (dx)
+			das = 16;
 		if (dy)
 		{
 			write();
@@ -204,12 +206,12 @@ static void advance(int input)
 	// move left / right
 	int dir = input & RIGHT ? 1 : input & LEFT ? -1 : 0;
 	if (dir)
-		if (input & ~old_input & (LEFT | RIGHT) == (LEFT | RIGHT))
+		if (input & ~old_input & (LEFT | RIGHT))
 		{
 			das = 0;
 			move(dir, 0, 0);
 		}
-		else if (16 == ++das)
+		else if (16 <= ++das)
 		{
 			das = 10;
 			move(dir, 0, 0);
