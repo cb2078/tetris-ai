@@ -307,22 +307,19 @@ int main(void)
 		for (int i = 0; i < 4; ++i)
 			for (int j = 0; j < 4; ++j)
 				draw_cell(j + WIDTH + 1, i + 2, shapes[next_shape][0][i][j]);
-		// current shape shadow
+		// current shape
 		{
 			int k = y;
 			while (k < HEIGHT - 1 && !collides(x, 1 + k, r))
 				++k;
 			for (int i = 0; i < 4; ++i)
 				for (int j = 0; j < 4; ++j)
-					if (SHAPE[i][j])
-						draw_cell(x + j, k + i, N_SHAPES + 1);
+					if (SHAPE[i][j] && !clear_delay)
+					{
+						draw_cell(x + j, k + i, N_SHAPES + 1); // shadow
+						draw_cell(x + j, y + i, SHAPE[i][j]);
+					}
 		}
-		// current shape
-		for (int i = 0; i < 4; ++i)
-			for (int j = 0; j < 4; ++j)
-				if (SHAPE[i][j])
-					draw_cell(x + j, y + i, SHAPE[i][j]);
-		
 		// debug
 		DrawText(TextFormat("pos:\t%d %d %d\nlevel:\t%d\nlines:\t%d\nscore:\t%d",
 		                    x, y, r,
