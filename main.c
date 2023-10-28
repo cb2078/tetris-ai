@@ -59,10 +59,11 @@ static bool collides(int x, int y, int r)
 static unsigned short random_int(void)
 {
 	static unsigned short seed = 2;
-	int x = (1 << 9) & seed;
-	int y = (1 << 1) & seed;
-	int left = x | y;
-	return left << 15 | seed >> 1;
+	int x = 1 & seed >> 9;
+	int y = 1 & seed >> 1;
+	int left = x ^ y;
+	seed = left << 15 | seed >> 1;
+	return seed;
 }
 
 static int random_shape(void)
