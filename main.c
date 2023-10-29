@@ -21,7 +21,8 @@ int clear_delay = 0;
 
 static int das = 0;
 
-int board[HEIGHT][WIDTH];
+typedef Board[HEIGHT][WIDTH];
+Board board;
 
 static void draw_cell(int x, int y, int c)
 {
@@ -270,7 +271,7 @@ static void advance(int input)
 	old_input = input;
 }
 
-int main(void)
+static void run_window(void)
 {
 	InitWindow(800, 600, "tetris ai");
 	SetTargetFPS(60);
@@ -336,5 +337,14 @@ int main(void)
 		DrawText(TextFormat("das: %d", das), 21, 525, 20, ORANGE);
 		EndDrawing();
 	}
+}
+
+#include "search.c"
+
+int main(void)
+{
+	init();
+	spawn_shape();
+	bfs();
 	return 0;
 }
