@@ -6,9 +6,12 @@
 #include "shape.c"
 #include "levels.c"
 
-int shape, next_shape;
+int shape_queue[2];
+#define current_shape	(shape_queue[0])
+#define next_shape	(shape_queue[1])
+
 int x, y, r;
-#define SHAPE shapes[shape][r]
+#define SHAPE shapes[current_shape][r]
 
 int lines = 0;
 int level = 15;
@@ -75,11 +78,11 @@ static int random_shape(void)
 	unsigned char i = random_int() >> 8;
 	i += ++shapes;
 	i &= 7;
-	if (7 == i || i == shape)
+	if (7 == i || i == current_shape)
 	{
 		i = random_int() >> 8;
 		i &= 7;
-		i += shape;
+		i += current_shape;
 		i %= 7;
 	}
 	return i;
@@ -87,8 +90,8 @@ static int random_shape(void)
 
 static bool spawn_shape(void)
 {
-	shape = next_shape;
-	next_shape = random_shape();
+	shape_queue[0] = shape_queue[1];
+	shape_queue[1] = random_shape();
 	x = 3;
 	y = 1;
 	r = 0;
@@ -133,7 +136,7 @@ static void clear(void)
 	}
 
 	// ARE
-	int b = 21 - (y + bottom(shape, r));
+	int b = 21 - (y + bottom(current_shape, r));
 	are = (b + 2) / 4 * 2 + 10;
 	clear_delay = l ? 20 : 0;
 }
@@ -308,7 +311,7 @@ static void run_window(void)
 		// next box
 		for (int i = 0; i < 4; ++i)
 			for (int j = 0; j < 4; ++j)
-				draw_cell(j + WIDTH + 1, i + 2, shapes[next_shape][0][i][j]);
+				draw_cell(j + WIDTH + 1, i + 2, shapes[shape_queue[1]][0][i][j]);
 		// current shape
 		{
 			int k = y;
