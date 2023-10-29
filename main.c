@@ -9,7 +9,7 @@
 int shape, next_shape;
 int x, y, r;
 #define SHAPE shapes[shape][r]
-		
+
 int lines = 0;
 int level = 15;
 int score = 0;
@@ -70,8 +70,8 @@ static int random_shape(void)
 {
 	static int shapes = 0;
 	static int spawn_id[N_SHAPES] = { 0x12, 0x0a, 0x0b, 0x08, 0x07, 0x0e, 0x02, };
-	
-	unsigned char i = random_int() >> 8; 
+
+	unsigned char i = random_int() >> 8;
 	i += ++shapes;
 	i &= 7;
 	if (7 == i || i == shape)
@@ -210,7 +210,7 @@ static void advance(int input)
 		spawn = false;
 		frames = 0;
 	}
-	
+
 	// rotate clockwise / anti clockwise
 	switch (input & ~old_input & (ROT_CW | ROT_ACW)) {
 		case ROT_CW:
@@ -220,11 +220,11 @@ static void advance(int input)
 			move(0, 0, 1);
 			break;
 	}
-	
+
 	// hard drop
 	if (input & ~old_input & UP)
 		while (move(0, 1, 0));
-	
+
 	// soft drop
 	if (input & DOWN)
 	{
@@ -243,7 +243,7 @@ static void advance(int input)
 		soft = 0;
 		soft_score = 0;
 	}
-	
+
 	// gravity
 	if (drop_speed(level) <= frames)
 	{
@@ -252,7 +252,7 @@ static void advance(int input)
 	}
 	else
 		++frames;
-	
+
 	int dir = input & RIGHT ? 1 : input & LEFT ? -1 : 0;
 	// move left / right
 	if (dir)
@@ -266,7 +266,7 @@ static void advance(int input)
 			das = 10;
 			move(dir, 0, 0);
 		}
-	
+
 	old_input = input;
 }
 
@@ -294,12 +294,12 @@ int main(void)
 		for (int i = 0; i < NUM_INPUTS; ++i)
 			if (IsKeyDown(keys[i]))
 				input |= 1 << i;
-		
+
 		advance(input);
 
 		BeginDrawing();
 		ClearBackground(BLACK);
-		
+
 		// board
 		for (int i = 2; i < HEIGHT; ++i)
 			for (int j = 0; j < WIDTH; ++j)
