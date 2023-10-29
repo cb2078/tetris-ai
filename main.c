@@ -88,7 +88,7 @@ static bool spawn_shape(void)
 {
 	shape = next_shape;
 	next_shape = random_shape();
-	x = 4;
+	x = 3;
 	y = 1;
 	r = 0;
 	return !collides(x, y, r);
