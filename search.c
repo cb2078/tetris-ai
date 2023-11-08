@@ -48,7 +48,7 @@ static bool set_contains(Set *s, Node *n)
 {
 	for (int i = 0; i < s->front; ++i)
 		// compare all the feilds of Node besides the last one
-		if (0 == memcmp(n, s->buf[i], sizeof(Node) - sizeof(Node *)))
+		if (0 == memcmp(n, &s->buf[i], sizeof(Node) - sizeof(Node *)))
 			return true;
 	return false;
 }
