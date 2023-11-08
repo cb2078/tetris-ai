@@ -63,7 +63,6 @@ static void set_push(Set *s, Node *n)
 static void bfs(void)
 {
 	Node start;
-	start.shape = current_shape;
 	start.x = x;
 	start.y = y;
 	start.r = r;
