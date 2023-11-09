@@ -81,3 +81,17 @@ static bool queue_empty(struct queue *q)
 {
 	return q->front == q->back;
 }
+
+typedef unsigned *bit_set_t;
+
+#define bit_set_new(bits) (unsigned [(bits) / 32]){0}
+
+static bool bit_set_contains(bit_set_t bs, unsigned i)
+{
+	return bs[i / 32] & (1 << i % 32);
+}
+
+static void bit_set_add(bit_set_t bs, unsigned i)
+{
+	bs[i / 32] |= (1 << i % 32);
+}

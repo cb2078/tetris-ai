@@ -5,7 +5,6 @@
 #include "adt.c"
 
 #define QUEUE_SIZE 5'000
-#define SET_SIZE 5'000
 
 struct node {
 	int x, y, r;
@@ -16,6 +15,14 @@ struct node {
 static bool node_cmp(struct node *x, struct node *y)
 {
 	return 0 == memcmp(x, y, sizeof(struct node) - sizeof(struct node *));
+}
+
+static unsigned short node_hash(struct node *n)
+{
+	// adding 4 to x ensures it's always positive
+	// x needs 4 bits, y needs 5 bits, r needs 2 bits
+	// 2^4 * 2^5 * 2^2 * 2^2 = 8192 permutations
+	return 4 + n->x | n->y << 4 | n->r << 9 | n->frames << 11;
 }
 
 // TODO extend this to the next box
@@ -30,7 +37,7 @@ static void bfs(void)
 	struct queue *q = queue_new(QUEUE_SIZE, sizeof(struct node));
 	queue_push(q, &start);
 
-	struct vec *visited = vec_new(SET_SIZE, sizeof(struct node));
+	bit_set_t visited = bit_set_new(1 << 13);
 
 	while (!queue_empty(q))
 	{
@@ -74,12 +81,11 @@ static void bfs(void)
 				child.prev = n;
 				if (collides(child.x, child.y, child.r))
 					continue;
-				// TODO find a more efficient way of checking visited nodes
-				if (vec_contains_cmp(visited, &child, node_cmp))
+				unsigned child_hash = node_hash(&child);
+				if (bit_set_contains(visited, child_hash))
 					continue;
-				vec_push(visited, &child);
+				bit_set_add(visited, child_hash);
 				queue_push(q, &child);
 			}
 	}
 }
-
