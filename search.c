@@ -10,7 +10,7 @@ struct Node {
 	Node *prev; // NOTE if searching is still slow, get rid of this feild
 };
 
-#define QUEUE_SIZE 25'000
+#define QUEUE_SIZE 5'000
 typedef struct Queue Queue;
 struct Queue {
 	int front, back;
@@ -78,11 +78,6 @@ static void bfs(void)
 	{
 		Node *n = queue_pop(&q);
 
-		// TODO find a more efficient way of checking visited nodes
-		if (set_contains(&visited, n))
-			continue;
-		set_push(&visited, n);
-
 		int frames = (1 + n->frames) % drop_speed(level);
 		int dy = !frames;
 		if (collides(n->x, dy + n->y, n->r))
@@ -120,6 +115,10 @@ static void bfs(void)
 				child.prev = n;
 				if (collides(child.x, child.y, child.r))
 					continue;
+				// TODO find a more efficient way of checking visited nodes
+				if (set_contains(&visited, &child))
+					continue;
+				set_push(&visited, &child);
 				queue_push(&q, &child);
 			}
 	}
