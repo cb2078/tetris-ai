@@ -6,15 +6,18 @@
 
 #define QUEUE_SIZE 5'000
 
-struct node {
+struct pos {
 	int x, y, r;
+};
+
+struct node {
+	struct pos;
 	int frames;
-	struct node *prev; // NOTE if searching is still slow, get rid of this feild
 };
 
 static bool node_cmp(struct node *x, struct node *y)
 {
-	return 0 == memcmp(x, y, sizeof(struct node) - sizeof(struct node *));
+	return 0 == memcmp(x, y, sizeof(struct node));
 }
 
 static unsigned short node_hash(struct node *n)
@@ -25,14 +28,15 @@ static unsigned short node_hash(struct node *n)
 	return 4 + n->x | n->y << 4 | n->r << 9 | n->frames << 11;
 }
 
+int c;
+
 // TODO extend this to the next box
-static void bfs(void)
+static void bfs(int shape, struct vec *results)
 {
 	struct node start;
-	start.x = x;
-	start.y = y;
-	start.r = r;
-	start.prev = 0;
+	start.x = 3;
+	start.y = 1;
+	start.r = 0;
 
 	struct queue *q = queue_new(QUEUE_SIZE, sizeof(struct node));
 	queue_push(q, &start);
@@ -46,26 +50,10 @@ static void bfs(void)
 
 		int frames = (1 + n->frames) % drop_speed(level);
 		int dy = !frames;
-		if (collides(n->x, dy + n->y, n->r))
+		if (collides(shape, n->x, dy + n->y, n->r))
 		{
 			assert(dy);
-#if 1
-			x = n->x;
-			y = n->y;
-			r = n->r;
-			printf("%d\n", y);
-			write();
-			for (int i = 0; i < HEIGHT; ++i)
-			{
-				for (int j = 0; j < WIDTH; ++j)
-					putchar(board[i][j] ? '#' : '.');
-				putchar('\n');
-			}
-			putchar('\n');
-			memset(board, 0, sizeof(Board));
-#else
-			// push the new shape at the spawn position
-#endif
+			vec_push(results, (struct pos *)n);
 			continue;
 		}
 		// TODO 30hz tapping instead of 60hz
@@ -78,8 +66,7 @@ static void bfs(void)
 				child.r += dr;
 				child.r %= 4;
 				child.frames = frames;
-				child.prev = n;
-				if (collides(child.x, child.y, child.r))
+				if (collides(shape, child.x, child.y, child.r))
 					continue;
 				unsigned child_hash = node_hash(&child);
 				if (bit_set_contains(visited, child_hash))

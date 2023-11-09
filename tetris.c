@@ -6,12 +6,9 @@
 #include "shape.c"
 #include "levels.c"
 
-int shape_queue[2];
-#define current_shape	(shape_queue[0])
-#define next_shape	(shape_queue[1])
-
+int shape, next_shape;
 int x, y, r;
-#define SHAPE shapes[current_shape][r]
+#define SHAPE shapes[shape][r]
 
 int lines = 0;
 int level = 15;
@@ -20,10 +17,20 @@ int soft_score = 0;
 
 bool spawn = true;
 
-typedef Board[HEIGHT][WIDTH];
-Board board;
+typedef board_t[HEIGHT][WIDTH];
+board_t board;
 
-static bool collides(int x, int y, int r)
+static void print_board(board_t board)
+{
+	for (int i = 0; i < HEIGHT; ++i)
+	{
+		for (int j = 0; j < WIDTH; ++j)
+			putchar(board[i][j] ? '#' : '.');
+		putchar('\n');
+	}
+}
+
+static bool collides(int shape, int x, int y, int r)
 {
 	for (int i = 0; i < 4; ++i)
 		for (int j = 0; j < 4; ++j)
@@ -56,11 +63,11 @@ static int random_shape(void)
 	unsigned char i = random_int() >> 8;
 	i += ++shapes;
 	i &= 7;
-	if (7 == i || i == current_shape)
+	if (7 == i || i == shape)
 	{
 		i = random_int() >> 8;
 		i &= 7;
-		i += current_shape;
+		i += shape;
 		i %= 7;
 	}
 	return i;
@@ -68,12 +75,12 @@ static int random_shape(void)
 
 static bool spawn_shape(void)
 {
-	shape_queue[0] = shape_queue[1];
-	shape_queue[1] = random_shape();
+	shape = next_shape;
+	next_shape = random_shape();
 	x = 3;
 	y = 1;
 	r = 0;
-	return !collides(x, y, r);
+	return !collides(shape, x, y, r);
 }
 
 static void inc_level(void)
@@ -114,7 +121,7 @@ static void clear(void)
 	}
 }
 
-static void write(void)
+static void write(int shape)
 {
 	for (int i = 0; i < 4; ++i)
 		for (int j = 0; j < 4; ++j)
@@ -125,11 +132,11 @@ static void write(void)
 
 static bool move(int dx, int dy, int dr)
 {
-	if (collides(x + dx, y + dy, (r + dr) % 4))
+	if (collides(shape, x + dx, y + dy, (r + dr) % 4))
 	{
 		if (dy)
 		{
-			write();
+			write(shape);
 			spawn = true;
 		}
 		return false;
@@ -143,4 +150,5 @@ static bool move(int dx, int dy, int dr)
 static void init()
 {
 	next_shape = random_shape();
+	spawn_shape();
 }
