@@ -2,81 +2,40 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
-typedef struct Node Node;
-struct Node {
-	int x, y, r;
-	int frames;
-	Node *prev; // NOTE if searching is still slow, get rid of this feild
-};
+#include "adt.c"
 
 #define QUEUE_SIZE 5'000
-typedef struct Queue Queue;
-struct Queue {
-	int front, back;
-	Node buf[QUEUE_SIZE];
-};
-
-static void queue_push(Queue *q, Node *n)
-{
-	assert(q->front < QUEUE_SIZE);
-	q->buf[q->front] = *n;
-	++q->front;
-}
-
-static Node *queue_pop(Queue *q)
-{
-	assert(q->back < q->front);
-	Node *n = &q->buf[q->back];
-	++q->back;
-	return n;
-}
-
-static bool queue_empty(Queue *q)
-{
-	return q->front == q->back;
-}
-
 #define SET_SIZE 5'000
-// NOTE change this to a hash set if searching is slow
-typedef struct Set Set;
-struct Set {
-	int front;
-	Node buf[SET_SIZE];
+
+struct node {
+	int x, y, r;
+	int frames;
+	struct node *prev; // NOTE if searching is still slow, get rid of this feild
 };
 
-static bool set_contains(Set *s, Node *n)
+static bool node_cmp(struct node *x, struct node *y)
 {
-	for (int i = 0; i < s->front; ++i)
-		// compare all the feilds of Node besides the last one
-		if (0 == memcmp(n, &s->buf[i], sizeof(Node) - sizeof(Node *)))
-			return true;
-	return false;
-}
-
-static void set_push(Set *s, Node *n)
-{
-	assert(s->front < SET_SIZE);
-	s->buf[s->front++] = *n;
+	return 0 == memcmp(x, y, sizeof(struct node) - sizeof(struct node *));
 }
 
 // TODO extend this to the next box
 static void bfs(void)
 {
-	Node start;
+	struct node start;
 	start.x = x;
 	start.y = y;
 	start.r = r;
 	start.prev = 0;
 
-	Queue q = {0};
-	queue_push(&q, &start);
+	struct queue *q = queue_new(QUEUE_SIZE, sizeof(struct node));
+	queue_push(q, &start);
 
-	Set visited = {0};
+	struct vec *visited = vec_new(SET_SIZE, sizeof(struct node));
 
-	while (!queue_empty(&q))
+	while (!queue_empty(q))
 	{
-		Node *n = queue_pop(&q);
+		struct node *n = queue_front(q);
+		queue_pop(q);
 
 		int frames = (1 + n->frames) % drop_speed(level);
 		int dy = !frames;
@@ -106,7 +65,7 @@ static void bfs(void)
 		for (int dx = -1; dx <= 1; ++dx)
 			for (int dr = 3; dr <= 5; ++dr)
 			{
-				Node child = *n;
+				struct node child = *n;
 				child.x += dx;
 				child.y += dy;
 				child.r += dr;
@@ -116,10 +75,10 @@ static void bfs(void)
 				if (collides(child.x, child.y, child.r))
 					continue;
 				// TODO find a more efficient way of checking visited nodes
-				if (set_contains(&visited, &child))
+				if (vec_contains_cmp(visited, &child, node_cmp))
 					continue;
-				set_push(&visited, &child);
-				queue_push(&q, &child);
+				vec_push(visited, &child);
+				queue_push(q, &child);
 			}
 	}
 }
