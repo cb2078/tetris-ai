@@ -30,7 +30,7 @@ static void print_board(board_t board)
 	}
 }
 
-static bool collides(int shape, int x, int y, int r)
+static bool collides(board_t board, int shape, int x, int y, int r)
 {
 	for (int i = 0; i < 4; ++i)
 		for (int j = 0; j < 4; ++j)
@@ -80,7 +80,7 @@ static bool spawn_shape(void)
 	x = 3;
 	y = 1;
 	r = 0;
-	return !collides(shape, x, y, r);
+	return !collides(board, shape, x, y, r);
 }
 
 static void inc_level(void)
@@ -121,30 +121,13 @@ static void clear(void)
 	}
 }
 
-static void write(int shape)
+static void write(board_t board, int shape, int x, int y, int r)
 {
 	for (int i = 0; i < 4; ++i)
 		for (int j = 0; j < 4; ++j)
 			if (SHAPE[i][j])
 				board[y + i][x + j] = SHAPE[i][j];
 	clear();
-}
-
-static bool move(int dx, int dy, int dr)
-{
-	if (collides(shape, x + dx, y + dy, (r + dr) % 4))
-	{
-		if (dy)
-		{
-			write(shape);
-			spawn = true;
-		}
-		return false;
-	}
-	x += dx;
-	y += dy;
-	r = (r + dr + 4) % 4;
-	return true;
 }
 
 static void init()

@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 // allocate memory on stack
 #define salloc(size) (void *)(char [size]){0}
 
@@ -19,6 +21,11 @@ static struct vec *vec_init(struct vec *v, int cap, int size)
 #define vec_new(cap, size) \
 	vec_init(salloc(sizeof(struct vec) + (cap) * (size)), (cap), (size))
 
+static struct vec *vec_new_heap(cap, size)
+{
+	return vec_init(malloc(sizeof(struct vec) + cap * size), cap , size);
+}
+
 static void vec_push(struct vec *v, void *elem)
 {
 	assert(v->len < v->cap);
@@ -26,10 +33,16 @@ static void vec_push(struct vec *v, void *elem)
 	++v->len;
 }
 
+static void *vec_at(struct vec *v, int i)
+{
+	assert(i < v->len);
+	return v->buf + i * v->size;
+}
+
 static bool vec_contains(struct vec *v, void *elem)
 {
 	for (int i = 0; i < v->len; ++i)
-		if (0 == memcpy(v->buf + i * v->size, elem, v->size))
+		if (0 == memcpy(vec_at(v, i), elem, v->size))
 			return true;
 	return false;
 }
@@ -37,7 +50,7 @@ static bool vec_contains(struct vec *v, void *elem)
 static bool vec_contains_cmp(struct vec *v, void *elem, cmp_fn cmp)
 {
 	for (int i = 0; i < v->len; ++i)
-		if (cmp(v->buf + i * v->size, elem))
+		if (cmp(vec_at(v, i), elem))
 			return true;
 	return false;
 }

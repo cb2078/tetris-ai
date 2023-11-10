@@ -6,12 +6,8 @@
 
 #define QUEUE_SIZE 5'000
 
-struct pos {
-	int x, y, r;
-};
-
 struct node {
-	struct pos;
+	int x, y, r;
 	int frames;
 };
 
@@ -31,8 +27,11 @@ static unsigned short node_hash(struct node *n)
 int c;
 
 // TODO extend this to the next box
-static void bfs(int shape, struct vec *results)
+static void bfs(board_t board, int shape, struct vec *results)
 {
+	board_t board_orig;
+	memcpy(board_orig, board, sizeof(board_t));
+
 	struct node start;
 	start.x = 3;
 	start.y = 1;
@@ -50,10 +49,12 @@ static void bfs(int shape, struct vec *results)
 
 		int frames = (1 + n->frames) % drop_speed(level);
 		int dy = !frames;
-		if (collides(shape, n->x, dy + n->y, n->r))
+		if (collides(board, shape, n->x, dy + n->y, n->r))
 		{
 			assert(dy);
-			vec_push(results, (struct pos *)n);
+			write(board, shape, n->x, n->y, n->r);
+			vec_push(results, board);
+			memcpy(board, board_orig, sizeof(board_t));
 			continue;
 		}
 		// TODO 30hz tapping instead of 60hz
@@ -66,7 +67,7 @@ static void bfs(int shape, struct vec *results)
 				child.r += dr;
 				child.r %= 4;
 				child.frames = frames;
-				if (collides(shape, child.x, child.y, child.r))
+				if (collides(board, shape, child.x, child.y, child.r))
 					continue;
 				unsigned child_hash = node_hash(&child);
 				if (bit_set_contains(visited, child_hash))
