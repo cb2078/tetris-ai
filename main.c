@@ -1,19 +1,27 @@
 #include "tetris.c"
+
+static int eval(board_t board)
+{
+	int holes = board_holes(board);
+	int height = board_height(board);
+	return 2 * (1 + holes) + height;
+}
+
 #include "search.c"
 
 int main(void)
 {
 	init();
-	shape = 4;
+	current_shape = 4;
 
-	struct vec *results = vec_new_heap(2000, sizeof(board_t));
-	bfs(board, shape, results);
+	struct node result = {0};
+	bfs(board, &result);
 
-	int len = results->len;
-	for (int i = 0; i < len; ++i)
-		bfs(vec_at(results, i), next_shape, results);
+	struct node zero = {0};
+	assert(0 != memcmp(result, zero, sizeof(struct node)));
 
-	printf("%d %d\n", len, results->len);
+	write(board, current_shape, result.x, result.y, result.r);
+	print_board(board);
 
 	return 0;
 }

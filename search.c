@@ -4,8 +4,6 @@
 
 #include "adt.c"
 
-#define QUEUE_SIZE 5'000
-
 struct node {
 	int x, y, r;
 	int frames;
@@ -13,7 +11,11 @@ struct node {
 
 static bool node_cmp(struct node *x, struct node *y)
 {
-	return 0 == memcmp(x, y, sizeof(struct node));
+	bool result = x->x == y->x &&
+		x->y == y->y &&
+		x->r == y->r &&
+		x->frames == y->frames;
+	return result;
 }
 
 static unsigned short node_hash(struct node *n)
@@ -24,11 +26,10 @@ static unsigned short node_hash(struct node *n)
 	return 4 + n->x | n->y << 4 | n->r << 9 | n->frames << 11;
 }
 
-int c;
-
-// TODO extend this to the next box
-static void bfs(board_t board, int shape, struct vec *results)
+static void bfs(board_t board, struct node *result)
 {
+	int best = 1000000;
+
 	board_t board_orig;
 	memcpy(board_orig, board, sizeof(board_t));
 
@@ -37,7 +38,7 @@ static void bfs(board_t board, int shape, struct vec *results)
 	start.y = 1;
 	start.r = 0;
 
-	struct queue *q = queue_new(QUEUE_SIZE, sizeof(struct node));
+	struct queue *q = queue_new(5000, sizeof(struct node));
 	queue_push(q, &start);
 
 	bit_set_t visited = bit_set_new(1 << 13);
@@ -49,12 +50,16 @@ static void bfs(board_t board, int shape, struct vec *results)
 
 		int frames = (1 + n->frames) % drop_speed(level);
 		int dy = !frames;
-		if (collides(board, shape, n->x, dy + n->y, n->r))
+		if (collides(board, current_shape, n->x, dy + n->y, n->r))
 		{
 			assert(dy);
-			write(board, shape, n->x, n->y, n->r);
-			vec_push(results, board);
+			write(board, current_shape, n->x, n->y, n->r);
+			int score = eval(board);
 			memcpy(board, board_orig, sizeof(board_t));
+			if (score >= best)
+				continue;
+			best = score;
+			*result = *n;
 			continue;
 		}
 		// TODO 30hz tapping instead of 60hz
@@ -67,7 +72,7 @@ static void bfs(board_t board, int shape, struct vec *results)
 				child.r += dr;
 				child.r %= 4;
 				child.frames = frames;
-				if (collides(board, shape, child.x, child.y, child.r))
+				if (collides(board, current_shape, child.x, child.y, child.r))
 					continue;
 				unsigned child_hash = node_hash(&child);
 				if (bit_set_contains(visited, child_hash))
