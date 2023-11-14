@@ -20,7 +20,7 @@ int main(void)
 	bfs(board, 0, &result);
 
 	struct node zero = {0};
-	assert(0 != memcmp(result, zero, sizeof(struct node)));
+	assert(0 != memcmp(&result, &zero, sizeof(struct node)));
 
 	write(board, current_shape, result.x, result.y, result.r);
 	print_board(board);

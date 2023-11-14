@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <assert.h>
+#include <stdio.h>
 
 #define HEIGHT 22
 #define WIDTH 10
@@ -20,7 +21,7 @@ int soft_score = 0;
 
 bool spawn = true;
 
-typedef board_t[HEIGHT][WIDTH];
+typedef int board_t[HEIGHT][WIDTH];
 board_t board = {
 	[18] = {0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
 	[19] = {0, 1, 1, 0, 0, 0, 0, 1, 0, 1},
@@ -86,9 +87,9 @@ static bool collides(board_t board, int shape, int x, int y, int r)
 static unsigned short random_int(void)
 {
 	static unsigned short seed = 2;
-	int x = 1 & seed >> 9;
-	int y = 1 & seed >> 1;
-	int left = x ^ y;
+	unsigned short x = 1 & seed >> 9;
+	unsigned short y = 1 & seed >> 1;
+	unsigned short left = x ^ y;
 	seed = left << 15 | seed >> 1;
 	return seed;
 }
@@ -99,13 +100,13 @@ static int random_shape(void)
 	static int spawn_id[N_SHAPES] = { 0x12, 0x0a, 0x0b, 0x08, 0x07, 0x0e, 0x02, };
 
 	unsigned char i = random_int() >> 8;
-	i += ++shapes;
+	i += (unsigned char)++shapes;
 	i &= 7;
 	if (7 == i || i == current_shape)
 	{
 		i = random_int() >> 8;
 		i &= 7;
-		i += current_shape;
+		i += (unsigned char)current_shape;
 		i %= 7;
 	}
 	return i;

@@ -18,7 +18,7 @@ static bool node_cmp(struct node *x, struct node *y)
 	return result;
 }
 
-static unsigned short node_hash(struct node *n)
+static unsigned node_hash(struct node *n)
 {
 	// adding 4 to x ensures it's always positive
 	// x needs 4 bits, y needs 5 bits, r needs 2 bits

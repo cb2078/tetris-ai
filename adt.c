@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 // allocate memory on stack
 #define salloc(size) (void *)(char [size]){0}
@@ -20,11 +21,6 @@ static struct vec *vec_init(struct vec *v, int cap, int size)
 
 #define vec_new(cap, size) \
 	vec_init(salloc(sizeof(struct vec) + (cap) * (size)), (cap), (size))
-
-static struct vec *vec_new_heap(cap, size)
-{
-	return vec_init(malloc(sizeof(struct vec) + cap * size), cap , size);
-}
 
 static void vec_push(struct vec *v, void *elem)
 {
