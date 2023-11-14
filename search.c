@@ -63,7 +63,8 @@ static int bfs(board_t board, int shape_index, struct node *result)
 			if (score >= best)
 				continue;
 			best = score;
-			*result = *n;
+			if (shape_index == 0)
+				*result = *n;
 			continue;
 		}
 		// TODO 30hz tapping instead of 60hz

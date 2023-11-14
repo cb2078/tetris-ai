@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <assert.h>
 
 #define HEIGHT 22
 #define WIDTH 10
@@ -11,7 +12,6 @@ int shape_queue[2];
 #define next_shape	(shape_queue[1])
 
 int x, y, r;
-#define SHAPE shapes[current_shape][r]
 
 int lines = 0;
 int level = 15;
@@ -73,7 +73,7 @@ static bool collides(board_t board, int shape, int x, int y, int r)
 	for (int i = 0; i < 4; ++i)
 		for (int j = 0; j < 4; ++j)
 		{
-			if (!SHAPE[i][j])
+			if (!shapes[shape][r][i][j])
 				continue;
 			int iy = i + y;
 			int jx = j + x;
@@ -161,10 +161,14 @@ static void clear(void)
 
 static void write(board_t board, int shape, int x, int y, int r)
 {
+	assert(!collides(board, shape, x, y, r));
 	for (int i = 0; i < 4; ++i)
 		for (int j = 0; j < 4; ++j)
-			if (SHAPE[i][j])
-				board[y + i][x + j] = SHAPE[i][j];
+		{
+			int cell = shapes[shape][r][i][j];
+			if (cell)
+				board[y + i][x + j] = cell;
+		}
 	clear();
 }
 
