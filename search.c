@@ -26,10 +26,13 @@ static unsigned short node_hash(struct node *n)
 	return 4 + n->x | n->y << 4 | n->r << 9 | n->frames << 11;
 }
 
-static void bfs(board_t board, struct node *result)
+static int bfs(board_t board, int shape_index, struct node *result)
 {
 	int best = 1000000;
 
+	int shape = shape_queue[shape_index];
+
+	assert(shape_index == 0 || !board_is_empty(board));
 	board_t board_orig;
 	memcpy(board_orig, board, sizeof(board_t));
 
@@ -50,11 +53,12 @@ static void bfs(board_t board, struct node *result)
 
 		int frames = (1 + n->frames) % drop_speed(level);
 		int dy = !frames;
-		if (collides(board, current_shape, n->x, dy + n->y, n->r))
+		if (collides(board, shape, n->x, dy + n->y, n->r))
 		{
 			assert(dy);
-			write(board, current_shape, n->x, n->y, n->r);
-			int score = eval(board);
+			write(board, shape, n->x, n->y, n->r);
+			int score = shape_index == 1 ? eval(board) :
+				bfs(board, 1, result);
 			memcpy(board, board_orig, sizeof(board_t));
 			if (score >= best)
 				continue;
@@ -72,7 +76,7 @@ static void bfs(board_t board, struct node *result)
 				child.r += dr;
 				child.r %= 4;
 				child.frames = frames;
-				if (collides(board, current_shape, child.x, child.y, child.r))
+				if (collides(board, shape, child.x, child.y, child.r))
 					continue;
 				unsigned child_hash = node_hash(&child);
 				if (bit_set_contains(visited, child_hash))
@@ -81,4 +85,6 @@ static void bfs(board_t board, struct node *result)
 				queue_push(q, &child);
 			}
 	}
+	assert(1000000 > best);
+	return best;
 }

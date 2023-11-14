@@ -33,7 +33,7 @@ static void print_board(board_t board)
 	for (int i = 0; i < HEIGHT; ++i)
 	{
 		for (int j = 0; j < WIDTH; ++j)
-			putchar(board[i][j] ? '#' : '.');
+			putchar(board[i][j] ? board[i][j] + '0' : '.');
 		putchar('\n');
 	}
 }
@@ -57,6 +57,15 @@ static int board_holes(board_t board)
 			else
 				holes += flag;
 	return holes;
+}
+
+static bool board_is_empty(board_t board)
+{
+	for (int i = 0; i < HEIGHT; ++i)
+		for (int j = 0; j < WIDTH; ++j)
+			if (board[i][j])
+				return false;
+	return true;
 }
 
 static bool collides(board_t board, int shape, int x, int y, int r)

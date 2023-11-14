@@ -14,8 +14,10 @@ int main(void)
 	init();
 	current_shape = 4;
 
+	print_board(board);
+
 	struct node result = {0};
-	bfs(board, &result);
+	bfs(board, 0, &result);
 
 	struct node zero = {0};
 	assert(0 != memcmp(result, zero, sizeof(struct node)));
