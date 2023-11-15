@@ -14,20 +14,14 @@ int shape_queue[2];
 
 int x, y, r;
 
+int frames = 0;
 int lines = 0;
-int level = 15;
+int level = 19;
 int score = 0;
 int soft_score = 0;
 
-bool spawn = true;
-
 typedef int board_t[HEIGHT][WIDTH];
-board_t board = {
-	[18] = {0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
-	[19] = {0, 1, 1, 0, 0, 0, 0, 1, 0, 1},
-	[20] = {1, 1, 1, 1, 0, 0, 0, 1, 1, 1},
-	[21] = {1, 1, 1, 1, 0, 0, 0, 1, 1, 1},
-};
+board_t board;
 
 static void print_board(board_t board)
 {
@@ -119,6 +113,7 @@ static bool spawn_shape(void)
 	x = 3;
 	y = 1;
 	r = 0;
+	frames = 0;
 	return !collides(board, current_shape, x, y, r);
 }
 
@@ -133,7 +128,6 @@ static bool row(int i)
 	for (int j = 0; j < WIDTH; ++j)
 		if (!board[i][j])
 			return false;
-	++lines;
 	inc_level();
 	return true;
 }
@@ -171,6 +165,16 @@ static void write(board_t board, int shape, int x, int y, int r)
 				board[y + i][x + j] = cell;
 		}
 	clear();
+}
+
+static bool move(int dx, int dy, int dr)
+{
+	if (collides(board, current_shape, x + dx, y + dy, (r + dr) % 4))
+		return false;
+	x += dx;
+	y += dy;
+	r = (r + dr + 4) % 4;
+	return true;
 }
 
 static void init()
