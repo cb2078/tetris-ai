@@ -12,18 +12,19 @@ static int eval(board_t board)
 int main(void)
 {
 	init();
-	current_shape = 4;
 
-	print_board(board);
+	int len;
+	inputs_t inputs;
+	search(inputs, &len);
 
-	struct node result = {0};
-	bfs(board, 0, &result);
+	for (int i = 0; i < len; ++i)
+		print_node(inputs + i);
 
-	struct node zero = {0};
-	assert(0 != memcmp(&result, &zero, sizeof(struct node)));
-
-	write(board, current_shape, result.x, result.y, result.r);
-	print_board(board);
+	{
+		struct node n = inputs[len - 1];
+		write(board, current_shape, n.x, n.y, n.r);
+		print_board(board);
+	}
 
 	return 0;
 }

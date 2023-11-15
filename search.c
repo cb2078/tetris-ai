@@ -6,7 +6,9 @@
 
 struct node {
 	int x, y, r;
+	int dx, dy, dr;
 	int frames;
+	struct node *prev;
 };
 
 static bool node_cmp(struct node *x, struct node *y)
@@ -26,22 +28,29 @@ static unsigned node_hash(struct node *n)
 	return 4 + n->x | n->y << 4 | n->r << 9 | n->frames << 11;
 }
 
-static int bfs(board_t board, int shape_index, struct node *result)
+static void print_node(struct node *n)
+{
+	printf("x %2d\ty %d\tr %d\tdx %2d\tdr %d\tframes %d\n",
+			n->x, n->y, n->r,
+			n->dx, n->dr,
+			n->frames);
+}
+
+static int bfs(board_t board, int shape_index, struct node *result, struct queue *q)
 {
 	int best = 1000000;
 
 	int shape = shape_queue[shape_index];
 
-	assert(shape_index == 0 || !board_is_empty(board));
 	board_t board_orig;
 	memcpy(board_orig, board, sizeof(board_t));
 
-	struct node start;
+	struct node start = {0};
 	start.x = 3;
 	start.y = 1;
-	start.r = 0;
 
-	struct queue *q = queue_new(5000, sizeof(struct node));
+	if (!q)
+		q = queue_new(5000, sizeof(struct node));
 	queue_push(q, &start);
 
 	bit_set_t visited = bit_set_new(1 << 13);
@@ -58,7 +67,7 @@ static int bfs(board_t board, int shape_index, struct node *result)
 			assert(dy);
 			write(board, shape, n->x, n->y, n->r);
 			int score = shape_index == 1 ? eval(board) :
-				bfs(board, 1, result);
+				bfs(board, 1, result, 0);
 			memcpy(board, board_orig, sizeof(board_t));
 			if (score >= best)
 				continue;
@@ -72,11 +81,12 @@ static int bfs(board_t board, int shape_index, struct node *result)
 			for (int dr = 3; dr <= 5; ++dr)
 			{
 				struct node child = *n;
-				child.x += dx;
-				child.y += dy;
-				child.r += dr;
+				child.x += child.dx = dx;
+				child.y += child.dy = dy;
+				child.r += child.dr = dr;
 				child.r %= 4;
 				child.frames = frames;
+				child.prev = n;
 				if (collides(board, shape, child.x, child.y, child.r))
 					continue;
 				unsigned child_hash = node_hash(&child);
@@ -88,4 +98,18 @@ static int bfs(board_t board, int shape_index, struct node *result)
 	}
 	assert(1000000 > best);
 	return best;
+}
+
+typedef struct node inputs_t[128];
+static void search(inputs_t inputs, int *len)
+{
+	struct node result = {0};
+	struct queue *q = queue_new(5000, sizeof(struct node));
+	bfs(board, 0, &result, q);
+
+	int i = 128;
+	for (struct node *n = &result; n; n = n->prev)
+		inputs[--i] = *n;
+	*len = 128 - i;
+	memmove(inputs, inputs + i, sizeof(struct node) * *len);
 }
