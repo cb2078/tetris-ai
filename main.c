@@ -22,7 +22,7 @@ int main(void)
 	inputs_t inputs;
 	search(inputs, &len);
 
-	int i = 1;
+	int i = 0;
 	bool running = true;
 	bool spawn = false;
 	while (!WindowShouldClose())
@@ -34,7 +34,7 @@ int main(void)
 		{
 			spawn = false;
 			search(inputs, &len);
-			i = 1;
+			i = 0;
 		}
 
 		++frames;
@@ -50,9 +50,8 @@ int main(void)
 		}
 		if (i < len)
 		{
-			struct node *n = &inputs[i];
-			move(n->dx, 0, n->dr);
-			assert(n->x == x && n->y == y && n->r == r);
+			struct input inp = inputs[i];
+			move(inp.dx, 0, inp.dr);
 			++i;
 		}
 
