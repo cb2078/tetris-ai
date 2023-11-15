@@ -51,7 +51,7 @@ int main(void)
 		if (i < len)
 		{
 			struct input inp = inputs[i];
-			move(inp.dx, 0, inp.dr);
+			assert(move(inp.dx, 0, inp.dr));
 			++i;
 		}
 

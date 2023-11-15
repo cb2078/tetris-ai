@@ -169,7 +169,7 @@ static void write(board_t board, int shape, int x, int y, int r)
 
 static bool move(int dx, int dy, int dr)
 {
-	if (collides(board, current_shape, x + dx, y + dy, (r + dr) % 4))
+	if (collides(board, current_shape, x + dx, y + dy, (r + dr + 4) % 4))
 		return false;
 	x += dx;
 	y += dy;
