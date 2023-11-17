@@ -57,14 +57,15 @@ static int bfs(board_t board, int shape_index, struct node *result, struct queue
 		int dy = 0 == frames % drop_speed(level);
 
 		// TODO 30hz tapping instead of 60hz
-		for (int dx = -1; dx <= 1; ++dx)
-			for (int dr = 3; dr <= 5; ++dr)
+		int dirs[] = {0, -1, 1};
+		for (int x = 0; x < 3; ++x)
+			for (int r = 0; r < 3; ++r)
 			{
 				struct node child = *n;
 				child.prev = n;
 				child.frames = frames;
-				child.x += child.dx = dx;
-				child.r += child.dr = dr;
+				child.x += child.dx = dirs[x];
+				child.r += (child.dr = dirs[r]) + 4;
 				child.r %= 4;
 
 				unsigned child_hash = node_hash(&child);
@@ -105,7 +106,9 @@ static void search(inputs_t inputs, int *len)
 
 	int i = 128;
 	for (struct node *n = &result; n; n = n->prev)
-		inputs[--i] = *n;
+		if (n->dx || n->dr)
+			inputs[--i] = *n;
 	*len = 128 - i;
+	assert(len >= 0);
 	memmove(inputs, inputs + i, sizeof(struct node) * *len);
 }
