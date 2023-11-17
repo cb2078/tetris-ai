@@ -4,15 +4,14 @@
 
 #include "adt.c"
 
-#define QUEUE_SIZE	3000
-#define BIT_SET_SIZE	(1 << 13)
-
-struct pos {
+struct node {
 	int x, y, r;
+	int dx, dy, dr;
 	int frames;
+	struct node *prev;
 };
 
-static bool pos_cmp(struct pos *x, struct pos *y)
+static bool node_cmp(struct node *x, struct node *y)
 {
 	bool result = x->x == y->x &&
 		x->y == y->y &&
@@ -21,21 +20,23 @@ static bool pos_cmp(struct pos *x, struct pos *y)
 	return result;
 }
 
-static unsigned pos_hash(struct pos *p)
+static unsigned node_hash(struct node *n)
 {
 	// adding 4 to x ensures it's always positive
 	// x needs 4 bits, y needs 5 bits, r needs 2 bits
 	// 2^4 * 2^5 * 2^2 * 2^2 = 8192 permutations
-	return 4 + p->x | p->y << 4 | p->r << 9 | p->frames << 11;
+	return 4 + n->x | n->y << 4 | n->r << 9 | n->frames << 11;
 }
 
-static void print_pos(struct pos *p)
+static void print_node(struct node *n)
 {
-	printf("x %2d\ty %d\tr %d\tframes %d\n",
-			p->x, p->y, p->r, p->frames);
+	printf("x %2d\ty %d\tr %d\tdx %2d\tdr %d\tframes %d\n",
+			n->x, n->y, n->r,
+			n->dx, n->dr,
+			n->frames);
 }
 
-static int bfs(board_t board, int shape_index, struct pos *result)
+static int bfs(board_t board, int shape_index, struct node *result, struct queue *q)
 {
 	int best = 1000000;
 
@@ -44,50 +45,51 @@ static int bfs(board_t board, int shape_index, struct pos *result)
 	board_t board_orig;
 	memcpy(board_orig, board, sizeof(board_t));
 
-	struct pos start = {0};
+	struct node start = {0};
 	start.x = 3;
 	start.y = 1;
 
-	struct queue *q = queue_new(QUEUE_SIZE, sizeof(struct pos));
+	if (!q)
+		q = queue_new(5000, sizeof(struct node));
 	queue_push(q, &start);
 
-	bit_set_t visited = bit_set_new(BIT_SET_SIZE);
+	bit_set_t visited = bit_set_new(1 << 13);
 
 	while (!queue_empty(q))
 	{
-		struct pos *p = queue_front(q);
+		struct node *n = queue_front(q);
 		queue_pop(q);
 
-		int frames = (1 + p->frames) % drop_speed(level);
+		int frames = (1 + n->frames) % drop_speed(level);
 		int dy = !frames;
-		if (collides(board, shape, p->x, dy + p->y, p->r))
+		if (collides(board, shape, n->x, dy + n->y, n->r))
 		{
 			assert(dy);
-			write(board, shape, p->x, p->y, p->r);
+			write(board, shape, n->x, n->y, n->r);
 			int score = shape_index == 1 ? eval(board) :
-				bfs(board, 1, result);
+				bfs(board, 1, result, 0);
 			memcpy(board, board_orig, sizeof(board_t));
 			if (score >= best)
 				continue;
 			best = score;
 			if (shape_index == 0)
-				*result = *p;
+				*result = *n;
 			continue;
 		}
 		// TODO 30hz tapping instead of 60hz
 		for (int dx = -1; dx <= 1; ++dx)
 			for (int dr = 3; dr <= 5; ++dr)
 			{
-				struct pos child = *p;
-				child.x += dx;
-				child.y += dy;
-				child.r += dr;
+				struct node child = *n;
+				child.x += child.dx = dx;
+				child.y += child.dy = dy;
+				child.r += child.dr = dr;
 				child.r %= 4;
 				child.frames = frames;
-
+				child.prev = n;
 				if (collides(board, shape, child.x, child.y, child.r))
 					continue;
-				unsigned child_hash = pos_hash(&child);
+				unsigned child_hash = node_hash(&child);
 				if (bit_set_contains(visited, child_hash))
 					continue;
 				bit_set_add(visited, child_hash);
@@ -98,79 +100,16 @@ static int bfs(board_t board, int shape_index, struct pos *result)
 	return best;
 }
 
-struct input {
-	int dx, dr, frames;
-};
-
-typedef struct input inputs_t[128];
-
-static void find_inputs(struct pos *dst, inputs_t inputs, int *len)
-{
-	struct node {
-		struct pos pos;
-		struct node *next;
-	};
-	struct node end = { *dst, 0, };
-
-	struct queue *q = queue_new(QUEUE_SIZE, sizeof(struct node));
-	queue_push(q, &end);
-
-	bit_set_t visited = bit_set_new(BIT_SET_SIZE);
-
-	while (!queue_empty(q))
-	{
-		struct node *n = queue_front(q);
-		queue_pop(q);
-		assert(n->pos.y > 0);
-
-		bool match = n->pos.x == 3 &&
-			n->pos.y == 1 &&
-			n->pos.r == 0 &&
-			n->pos.frames == frames;
-		if (match)
-		{
-			*len = 0;
-			for (; n->next; n = n->next)
-			{
-				struct input input;
-				input.dx = n->next->pos.x - n->pos.x;
-				input.dr = n->next->pos.r - n->pos.r;
-				input.frames = n->pos.frames;
-				inputs[*len] = input;
-				*len += 1;
-			}
-			return;
-		}
-
-		int frames = (n->pos.frames ? n->pos.frames : drop_speed(level)) - 1;
-		int dy = !frames;
-		int dxs[3] = {0, -1, 1};
-		int drs[3] = {4,  5, 3};
-		// TODO 30hz tapping instead of 60hz
-		for (int i = 0; i < 3; ++i)
-			for (int j = 0; j < 3; ++j)
-			{
-				struct node child = *n;
-				child.pos.x += dxs[i];
-				child.pos.y -= dy;
-				child.pos.r += drs[j]; child.pos.r %= 4;
-				child.pos.frames = frames;
-				child.next = n;
-
-				if (collides(board, current_shape, child.pos.x, child.pos.y, child.pos.r))
-					continue;
-				unsigned child_hash = pos_hash(&child.pos);
-				if (bit_set_contains(visited, child_hash))
-					continue;
-				bit_set_add(visited, child_hash);
-				queue_push(q, &child);
-			}
-	}
-}
-
+typedef struct node inputs_t[128];
 static void search(inputs_t inputs, int *len)
 {
-	struct pos dst;
-	bfs(board, 0, &dst);
-	find_inputs(&dst, inputs, len);
+	struct node result = {0};
+	struct queue *q = queue_new(5000, sizeof(struct node));
+	bfs(board, 0, &result, q);
+
+	int i = 128;
+	for (struct node *n = &result; n; n = n->prev)
+		inputs[--i] = *n;
+	*len = 128 - i;
+	memmove(inputs, inputs + i, sizeof(struct node) * *len);
 }
