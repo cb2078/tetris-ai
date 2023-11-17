@@ -75,7 +75,9 @@ static int bfs(board_t board, int shape_index, struct node *result, struct queue
 
 				if (collides(board, shape, child.x, child.y, child.r))
 					continue;
-				if (dy && collides(board, shape, child.x, child.y + dy, child.r))
+
+				child.y += child.dy = dy;
+				if (dy && collides(board, shape, child.x, child.y, child.r))
 				{
 					write(board, shape, n->x, n->y, n->r);
 					int score = shape_index == 1 ? eval(board) :
@@ -88,7 +90,6 @@ static int bfs(board_t board, int shape_index, struct node *result, struct queue
 						*result = *n;
 					continue;
 				}
-				child.y += child.dy = dy;
 
 				queue_push(q, &child);
 			}
@@ -97,12 +98,15 @@ static int bfs(board_t board, int shape_index, struct node *result, struct queue
 	return best;
 }
 
+board_t board_tmp;
 typedef struct node inputs_t[128];
 static void search(inputs_t inputs, int *len)
 {
 	struct node result = {0};
 	struct queue *q = queue_new(5000, sizeof(struct node));
 	bfs(board, 0, &result, q);
+	memcpy(board_tmp, board, sizeof(board_t));
+	write(board_tmp, current_shape, result.x, result.y, result.r);
 
 	int i = 128;
 	for (struct node *n = &result; n; n = n->prev)

@@ -52,6 +52,7 @@ int main(void)
 				if (!move(0, 1, 0))
 				{
 					write(board, current_shape, x, y, r);
+					assert(0 == memcmp(board, board_tmp, sizeof(board_t)));
 					spawn = true;
 					running = spawn_shape();
 				}
