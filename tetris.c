@@ -123,7 +123,7 @@ static void inc_level(void)
 		level += lines % 10 == 0;
 }
 
-static bool row(int i)
+static bool row(board_t board, int i)
 {
 	for (int j = 0; j < WIDTH; ++j)
 		if (!board[i][j])
@@ -133,13 +133,13 @@ static bool row(int i)
 }
 
 static int points_per_line[] = { 0, 40, 100, 300, 1200, };
-static void clear(void)
+static void clear(board_t board)
 {
 	bool clears[HEIGHT];
 	int l = 0;
 	for (int i = 0; i < HEIGHT; ++i)
 	{
-		l += clears[i] = row(i);
+		l += clears[i] = row(board, i);
 	}
 
 	score += points_per_line[l] * (level + 1) + soft_score;
@@ -164,7 +164,7 @@ static void write(board_t board, int shape, int x, int y, int r)
 			if (cell)
 				board[y + i][x + j] = cell;
 		}
-	clear();
+	clear(board);
 }
 
 static bool move(int dx, int dy, int dr)
