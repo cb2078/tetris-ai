@@ -27,36 +27,36 @@ int main(void)
 	bool spawn = false;
 	while (!WindowShouldClose())
 	{
-		if (!running)
-			goto render;
-
-		if (spawn)
+		if (running)
 		{
-			spawn = false;
-			search(inputs, &len);
-			i = 1;
-		}
 
-		++frames;
-		if (frames >= drop_speed(level))
-		{
-			frames = 0;
-			if (!move(0, 1, 0))
+			if (spawn)
 			{
-				write(board, current_shape, x, y, r);
-				spawn = true;
-				running = spawn_shape();
+				spawn = false;
+				search(inputs, &len);
+				i = 1;
+				frames = 0;
+			}
+
+			++frames;
+			int dy = 0 == frames % drop_speed(level);
+			if (i < len)
+			{
+				struct node *n = &inputs[i];
+				assert(move(n->dx, 0, n->dr));
+				assert(n->x == x && n->y == dy + y && n->r == r && n->frames == frames);
+				++i;
+			}
+			if (dy)
+			{
+				if (!move(0, 1, 0))
+				{
+					write(board, current_shape, x, y, r);
+					spawn = true;
+					running = spawn_shape();
+				}
 			}
 		}
-		if (i < len)
-		{
-			struct node *n = &inputs[i];
-			move(n->dx, 0, n->dr);
-			assert(n->x == x && n->y == y && n->r == r);
-			++i;
-		}
-
-render:
 		draw();
 	}
 }
