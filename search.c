@@ -79,6 +79,8 @@ static int bfs(board_t board, int shape_index, struct node *result, struct queue
 				child.y += child.dy = dy;
 				if (dy && collides(board, shape, child.x, child.y, child.r))
 				{
+					if (!collides(board, shape, n->x, n->y + 1, n->r))
+						continue;
 					write(board, shape, n->x, n->y, n->r);
 					int score = shape_index == 1 ? eval(board) :
 						bfs(board, 1, result, 0);
