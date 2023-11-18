@@ -42,6 +42,29 @@ static int board_height(board_t board)
 	return 0;
 }
 
+static float board_variance(board_t board)
+{
+	int sum = 0;
+	int heights[WIDTH] = {0};
+	for (int j = 0; j < WIDTH; ++j)
+	{
+		for (int i = 0; i < HEIGHT; ++i)
+			if (board[i][j])
+			{
+				sum += heights[j] = HEIGHT - i;
+				break;
+			}
+	}
+	float avg = (float)sum / 10;
+	float variance = 0;
+	for (int j = 0; j < WIDTH; ++j)
+	{
+		float diff = heights[j] - avg;
+		variance += diff > 0 ? diff : -diff;
+	}
+	return variance;
+}
+
 static int board_holes(board_t board)
 {
 	int holes = 0;

@@ -2,9 +2,10 @@
 
 static int eval(board_t board)
 {
-	int holes = board_holes(board);
 	int height = board_height(board);
-	return holes + 5 * height;
+	int holes = board_holes(board);
+	float variance = board_variance(board);
+	return 5 * holes + (int)variance + 5 * height;
 }
 
 #include "search.c"
