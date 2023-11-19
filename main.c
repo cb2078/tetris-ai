@@ -15,7 +15,7 @@ static int eval(board_t board)
 int main(void)
 {
 	InitWindow(800, 600, "tetris ai");
-	SetTargetFPS(90);
+	SetTargetFPS(60);
 
 	init();
 
@@ -45,7 +45,7 @@ int main(void)
 			{
 				struct node *n = &inputs[i];
 				assert(move(n->dx, 0, n->dr));
-				assert(n->x == x && n->y == dy + y && n->r == r);
+				assert(n->x == x && n->r == r);
 				++i;
 			}
 			if (dy)
@@ -53,7 +53,14 @@ int main(void)
 				if (!move(0, 1, 0))
 				{
 					write(board, current_shape, x, y, r);
-					assert(0 == memcmp(board, board_tmp, sizeof(board_t)));
+					if (0 != memcmp(board, board_tmp, sizeof(board_t)))
+					{
+						puts("board");
+						print_board(board);
+						puts("\nboard from search");
+						print_board(board_tmp);
+						*(int *)NULL = 200;
+					}
 					spawn = true;
 					running = spawn_shape();
 				}
