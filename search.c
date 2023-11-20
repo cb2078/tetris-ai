@@ -4,21 +4,18 @@
 
 #include "adt.c"
 
-#define QUEUE_SIZE	64
-
 struct node {
 	int x, y, r;
-	int dx, dy, dr;
+	int dx, dr;
 	int frames;
 	struct node *prev;
 };
 
-// x needs 4 bits, y needs 5 bits, r needs 2 bits
-#define HASH_SIZE	(1 << (4 + 5 + 2))
+// x needs 4 bits, r needs 2 bits
+#define HASH_SIZE	(1 << 6)
 static unsigned node_hash(struct node *n)
 {
-	// adding 4 to x ensures it's always positive
-	return 4 + n->x | n->y << 4 | n->r << 9;
+	return n->x + 4 | n->r << 4;
 }
 
 static void print_node(struct node *n)
@@ -29,108 +26,74 @@ static void print_node(struct node *n)
 			n->frames);
 }
 
-static int bfs(board_t board, int shape_index, struct node *result, struct queue *q)
+static void bfs(struct node *nodes, struct node *result)
 {
-	int best = 1000000;
-
-	int shape = shape_queue[shape_index];
-
-	board_t board_orig;
-	memcpy(board_orig, board, sizeof(board_t));
-
 	struct node start = {0};
 	start.x = 3;
 	start.y = 1;
 
-	assert(!collides(board, shape_index, start.x, start.y, start.r));
-
-	if (!q)
-		q = queue_new(QUEUE_SIZE, sizeof(struct node));
-	queue_push(q, &start);
-
 	bit_set_t visited = bit_set_new(HASH_SIZE);
+	bit_set_add(visited, node_hash(&start));
 
-	while (!queue_empty(q))
-	{
-		struct node *n = queue_front(q);
-		queue_pop(q);
+	struct node *queue_front = nodes;
+	struct node *queue_back = nodes;
+	*queue_back++ = start;
 
-		int frames = 1 + n->frames;
-		int dy = 0 == frames % drop_speed(level);
+	while (queue_back  > queue_front) {
+		struct node *cur = queue_front++;
 
-		// TODO 30hz tapping instead of 60hz
-		int dirs[] = {0, -1, 1};
-		for (int x = 0; x < 3; ++x)
-			for (int r = 2; r >= 0; --r)
-			{
-				struct node child = *n;
-				child.prev = n;
-				child.frames = frames;
-				child.x += child.dx = dirs[x];
-				child.r += (child.dr = dirs[r]) + 4;
-				child.r %= 4;
+		int frames = 1 + cur->frames;
+		int dy = frames % drop_speed(level) == 0;
 
-				unsigned child_hash = node_hash(&child);
-				if ((dirs[x] || dirs[r]) && bit_set_contains(visited, child_hash))
+		for (int dx = -1; dx <= 1; ++dx)
+			for (int dr = -1; dr <= 1; ++dr) {
+				struct node next = *cur;
+				next.x += next.dx = dx;
+				next.y += dy;
+				next.r += (next.dr = dr) + 4;
+				next.r %= 4;
+				next.frames = frames;
+				next.prev = cur;
+
+				unsigned hash = node_hash(&next);
+				if (bit_set_contains(visited, hash))
 					continue;
-				bit_set_add(visited, child_hash);
+				bit_set_add(visited, hash);
 
-				if (collides(board, shape, child.x, child.y, child.r))
+				if (collides(board, current_shape, next.x, next.y, next.r))
 					continue;
 
-				// TODO get rid of the duplicated code
-				child.y += child.dy = dy;
-				if (dy && collides(board, shape, child.x, child.y, child.r))
-				{
-					if (!collides(board, shape, n->x, n->y + 1, n->r))
-						continue;
-					write(board, shape, n->x, n->y, n->r);
-
-					int score = shape_index == 1 ? eval(board) :
-						bfs(board, 1, result, 0);
-					memcpy(board, board_orig, sizeof(board_t));
-					if (score >= best)
-						continue;
-					best = score;
-					if (shape_index == 0)
-						*result = *n;
-					continue;
-				}
-
-				if (dirs[x] == 0 && dirs[r] == 0)
-				{
-					while (!collides(board, shape, child.x, child.y + 1, child.r))
-					{
-						bit_set_add(visited, node_hash(&child));
-						child.y += 1;
-					}
-					write(board, shape, child.x, child.y, child.r);
-
-					int score = shape_index == 1 ? eval(board) :
-						bfs(board, 1, result, 0);
-					memcpy(board, board_orig, sizeof(board_t));
-					if (score >= best)
-						continue;
-					best = score;
-					if (shape_index == 0)
-						*result = child;
-					continue;
-				}
-
-				queue_push(q, &child);
+				*queue_back++ = next;
 			}
 	}
-	assert(1000000 > best);
-	return best;
+
+	board_t board_cpy;
+	int len = (int)(queue_back - nodes);
+	assert(len < 40);
+	int best = 1000000;
+	for (int i = 0; i < len; ++i) {
+		struct node n = nodes[i];
+		while (!collides(board, current_shape, n.x, n.y + 1, n.r))
+			n.y += 1;
+		memcpy(board_cpy, board, sizeof(board_t));
+		write(board_cpy, current_shape, n.x, n.y, n.r);
+
+		int score = eval(board_cpy);
+		if (score >= best)
+			continue;
+		best = score;
+		*result = n;
+	}
+	assert(best < 1000000);
 }
 
 board_t board_tmp;
 typedef struct node inputs_t[128];
 static void search(inputs_t inputs, int *len)
 {
+	struct node nodes[40];
 	struct node result = {0};
-	struct queue *q = queue_new(QUEUE_SIZE, sizeof(struct node));
-	bfs(board, 0, &result, q);
+	bfs(nodes, &result);
 	memcpy(board_tmp, board, sizeof(board_t));
 	write(board_tmp, current_shape, result.x, result.y, result.r);
 
