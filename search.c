@@ -4,7 +4,7 @@
 
 #include "adt.c"
 
-#define QUEUE_SIZE	5000
+#define QUEUE_SIZE	64
 
 struct node {
 	int x, y, r;
@@ -13,12 +13,12 @@ struct node {
 	struct node *prev;
 };
 
+// x needs 4 bits, y needs 5 bits, r needs 2 bits
+#define HASH_SIZE	(1 << (4 + 5 + 2))
 static unsigned node_hash(struct node *n)
 {
 	// adding 4 to x ensures it's always positive
-	// x needs 4 bits, y needs 5 bits, r needs 2 bits
-	// 2^4 * 2^5 * 2^2 * 2^2 = 8192 permutations
-	return 4 + n->x | n->y << 4 | n->r << 9 | (n->frames % drop_speed(level)) << 11;
+	return 4 + n->x | n->y << 4 | n->r << 9;
 }
 
 static void print_node(struct node *n)
@@ -48,7 +48,7 @@ static int bfs(board_t board, int shape_index, struct node *result, struct queue
 		q = queue_new(QUEUE_SIZE, sizeof(struct node));
 	queue_push(q, &start);
 
-	bit_set_t visited = bit_set_new(1 << 13);
+	bit_set_t visited = bit_set_new(HASH_SIZE);
 
 	while (!queue_empty(q))
 	{
@@ -71,7 +71,7 @@ static int bfs(board_t board, int shape_index, struct node *result, struct queue
 				child.r %= 4;
 
 				unsigned child_hash = node_hash(&child);
-				if (bit_set_contains(visited, child_hash))
+				if ((dirs[x] || dirs[r]) && bit_set_contains(visited, child_hash))
 					continue;
 				bit_set_add(visited, child_hash);
 
@@ -97,7 +97,7 @@ static int bfs(board_t board, int shape_index, struct node *result, struct queue
 					continue;
 				}
 
-				if (dirs[x] == 0 && n->dx == 0 || dirs[r] == 0 && n->dr == 0)
+				if (dirs[x] == 0 && dirs[r] == 0)
 				{
 					while (!collides(board, shape, child.x, child.y + 1, child.r))
 					{
