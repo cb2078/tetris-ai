@@ -4,8 +4,8 @@
 
 #include "adt.c"
 
-#define HASH_SIZE	(1 << 6)
-#define QUEUE_SIZE	(WIDTH * 4)
+#define HASH_SIZE	(1 << 8)
+#define QUEUE_SIZE	(WIDTH * 4 * 4)
 
 struct node {
 	int x, y, r;
@@ -16,7 +16,9 @@ struct node {
 
 static unsigned node_hash(struct node *n)
 {
-	return n->x + 4 | n->r << 4;
+	int dx = abs(n->dx);
+	int dr = abs(n->dr);
+	return n->x + 4 | n->r << 4 | dx << 6 | dr << 7;
 }
 
 static void print_node(struct node *n)
@@ -50,6 +52,9 @@ static int bfs(board_t board, int shape_index, struct node *nodes, struct node *
 
 		for (int dx = -1; dx <= 1; ++dx)
 			for (int dr = -1; dr <= 1; ++dr) {
+				if (cur->dx && dr || cur->dr && dr)
+					continue;
+
 				struct node next = *cur;
 				next.x += next.dx = dx;
 				next.y += dy;
@@ -67,6 +72,7 @@ static int bfs(board_t board, int shape_index, struct node *nodes, struct node *
 					continue;
 
 				*queue_back++ = next;
+				assert(queue_back - nodes < QUEUE_SIZE);
 
 				while (!collides(board, shape, next.x, next.y + 1, next.r))
 					next.y += 1;
