@@ -4,8 +4,8 @@
 
 #include "adt.c"
 
-#define HASH_SIZE	(1 << 8)
-#define QUEUE_SIZE	(WIDTH * 4 * 4)
+#define HASH_SIZE	(1 << 6)
+#define QUEUE_SIZE	(WIDTH * 4)
 
 struct node {
 	int x, y, r;
@@ -16,9 +16,8 @@ struct node {
 
 static unsigned node_hash(struct node *n)
 {
-	int dx = abs(n->dx);
-	int dr = abs(n->dr);
-	return n->x + 4 | n->r << 4 | dx << 6 | dr << 7;
+	// 4 bits for x, 2 bits for r
+	return n->x + 4 | n->r << 4;
 }
 
 static void print_node(struct node *n)
@@ -47,20 +46,12 @@ static int bfs(board_t board, int shape_index, struct node *nodes, struct node *
 	while (queue_back  > queue_front) {
 		struct node *cur = queue_front++;
 
-		int frames = 1 + cur->frames;
-		int dy = frames % drop_speed(level) == 0;
-
 		for (int dx = -1; dx <= 1; ++dx)
 			for (int dr = -1; dr <= 1; ++dr) {
-				if (cur->dx && dr || cur->dr && dr)
-					continue;
-
 				struct node next = *cur;
 				next.x += next.dx = dx;
-				next.y += dy;
 				next.r += (next.dr = dr) + 4;
 				next.r %= 4;
-				next.frames = frames;
 				next.prev = cur;
 
 				unsigned hash = node_hash(&next);
@@ -70,12 +61,20 @@ static int bfs(board_t board, int shape_index, struct node *nodes, struct node *
 
 				if (collides(board, shape, next.x, next.y, next.r))
 					continue;
+				for (int i = 0; i < 2; ++i) {
+					next.frames++;
+					int dy = next.frames % drop_speed(level) == 0;
+					if (dy && collides(board, shape, next.x, next.y + dy, next.r))
+						goto lock;
+					next.y += dy;
+				}
 
 				*queue_back++ = next;
 				assert(queue_back - nodes < QUEUE_SIZE);
 
 				while (!collides(board, shape, next.x, next.y + 1, next.r))
 					next.y += 1;
+lock:
 				board_t board_cpy;
 				memcpy(board_cpy, board, sizeof(board_t));
 				write(board_cpy, shape, next.x, next.y, next.r);

@@ -39,15 +39,15 @@ int main(void)
 				frames = 0;
 			}
 
-			++frames;
-			int dy = 0 == frames % drop_speed(level);
-			if (i < len && frames == inputs[i].frames)
+			if (i < len && frames == inputs[i].frames - 2)
 			{
 				struct node *n = &inputs[i];
 				assert(move(n->dx, 0, n->dr));
 				assert(n->x == x && n->r == r);
 				++i;
 			}
+			++frames;
+			int dy = 0 == frames % drop_speed(level);
 			if (dy)
 			{
 				if (!move(0, 1, 0))
