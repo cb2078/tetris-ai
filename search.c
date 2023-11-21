@@ -26,8 +26,10 @@ static void print_node(struct node *n)
 			n->frames);
 }
 
-static void bfs(struct node *nodes, struct node *result)
+static int bfs(board_t board, int shape_index, struct node *nodes, struct node *result)
 {
+	int shape = shape_queue[shape_index];
+
 	struct node start = {0};
 	start.x = 3;
 	start.y = 1;
@@ -60,7 +62,7 @@ static void bfs(struct node *nodes, struct node *result)
 					continue;
 				bit_set_add(visited, hash);
 
-				if (collides(board, current_shape, next.x, next.y, next.r))
+				if (collides(board, shape, next.x, next.y, next.r))
 					continue;
 
 				*queue_back++ = next;
@@ -73,18 +75,20 @@ static void bfs(struct node *nodes, struct node *result)
 	int best = 1000000;
 	for (int i = 0; i < len; ++i) {
 		struct node n = nodes[i];
-		while (!collides(board, current_shape, n.x, n.y + 1, n.r))
+		while (!collides(board, shape, n.x, n.y + 1, n.r))
 			n.y += 1;
 		memcpy(board_cpy, board, sizeof(board_t));
-		write(board_cpy, current_shape, n.x, n.y, n.r);
+		write(board_cpy, shape, n.x, n.y, n.r);
 
-		int score = eval(board_cpy);
+		int score = shape_index == 1 ? eval(board_cpy) :
+			bfs(board_cpy, 1, (struct node[40]){0}, result);
 		if (score >= best)
 			continue;
 		best = score;
-		*result = n;
+		if (shape_index == 0) *result = n;
 	}
 	assert(best < 1000000);
+	return best;
 }
 
 board_t board_tmp;
@@ -93,7 +97,7 @@ static void search(inputs_t inputs, int *len)
 {
 	struct node nodes[40];
 	struct node result = {0};
-	bfs(nodes, &result);
+	bfs(board, 0, nodes, &result);
 	memcpy(board_tmp, board, sizeof(board_t));
 	write(board_tmp, current_shape, result.x, result.y, result.r);
 
