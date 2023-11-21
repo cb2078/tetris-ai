@@ -4,6 +4,9 @@
 
 #include "adt.c"
 
+#define HASH_SIZE	(1 << 6)
+#define QUEUE_SIZE	(WIDTH * 4)
+
 struct node {
 	int x, y, r;
 	int dx, dr;
@@ -11,8 +14,6 @@ struct node {
 	struct node *prev;
 };
 
-// x needs 4 bits, r needs 2 bits
-#define HASH_SIZE	(1 << 6)
 static unsigned node_hash(struct node *n)
 {
 	return n->x + 4 | n->r << 4;
@@ -29,13 +30,13 @@ static void print_node(struct node *n)
 static int bfs(board_t board, int shape_index, struct node *nodes, struct node *result)
 {
 	int shape = shape_queue[shape_index];
+	int best = 1000000;
 
 	struct node start = {0};
 	start.x = 3;
 	start.y = 1;
 
 	bit_set_t visited = bit_set_new(HASH_SIZE);
-	bit_set_add(visited, node_hash(&start));
 
 	struct node *queue_front = nodes;
 	struct node *queue_back = nodes;
@@ -66,27 +67,22 @@ static int bfs(board_t board, int shape_index, struct node *nodes, struct node *
 					continue;
 
 				*queue_back++ = next;
+
+				while (!collides(board, shape, next.x, next.y + 1, next.r))
+					next.y += 1;
+				board_t board_cpy;
+				memcpy(board_cpy, board, sizeof(board_t));
+				write(board_cpy, shape, next.x, next.y, next.r);
+
+				int score = shape_index == 1 ? eval(board_cpy) :
+					bfs(board_cpy, 1, (struct node[QUEUE_SIZE]){0}, result);
+				if (score >= best)
+					continue;
+				best = score;
+				if (shape_index == 0) *result = next;
 			}
 	}
 
-	board_t board_cpy;
-	int len = (int)(queue_back - nodes);
-	assert(len < 40);
-	int best = 1000000;
-	for (int i = 0; i < len; ++i) {
-		struct node n = nodes[i];
-		while (!collides(board, shape, n.x, n.y + 1, n.r))
-			n.y += 1;
-		memcpy(board_cpy, board, sizeof(board_t));
-		write(board_cpy, shape, n.x, n.y, n.r);
-
-		int score = shape_index == 1 ? eval(board_cpy) :
-			bfs(board_cpy, 1, (struct node[40]){0}, result);
-		if (score >= best)
-			continue;
-		best = score;
-		if (shape_index == 0) *result = n;
-	}
 	assert(best < 1000000);
 	return best;
 }
@@ -95,7 +91,7 @@ board_t board_tmp;
 typedef struct node inputs_t[128];
 static void search(inputs_t inputs, int *len)
 {
-	struct node nodes[40];
+	struct node nodes[QUEUE_SIZE];
 	struct node result = {0};
 	bfs(board, 0, nodes, &result);
 	memcpy(board_tmp, board, sizeof(board_t));
