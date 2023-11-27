@@ -1,5 +1,3 @@
-#define N_SHAPES 7
-
 enum shape_type {
 	SHAPE_I,
 	SHAPE_O,
@@ -7,7 +5,8 @@ enum shape_type {
 	SHAPE_Z,
 	SHAPE_J,
 	SHAPE_L,
-	SHAPE_T
+	SHAPE_T,
+	N_SHAPES,
 };
 
 int shapes[N_SHAPES][4][4][4] =

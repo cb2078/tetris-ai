@@ -28,10 +28,9 @@ static void print_node(struct node *n)
 			n->frames);
 }
 
-static int bfs(board_t board, int shape_index, struct node *nodes, struct node *result)
+static int bfs(int depth, board_t board, enum shape_type shape, struct node *nodes, struct node *result)
 {
-	int shape = shape_queue[shape_index];
-	int best = 1000000;
+	int best = 1000000;	// TODO should really use int max here
 
 	struct node start = {0};
 	start.x = 3;
@@ -79,12 +78,40 @@ lock:
 				memcpy(board_cpy, board, sizeof(board_t));
 				write(board_cpy, shape, next.x, next.y, next.r);
 
-				int score = shape_index == 1 ? eval(board_cpy) :
-					bfs(board_cpy, 1, (struct node[QUEUE_SIZE]){0}, result);
+				int score = 0;
+				switch (depth) {
+					case 0:
+						score = bfs(1 + depth, board_cpy, shape_queue[1],
+								(struct node[QUEUE_SIZE]){0}, result);
+						break;
+// consider all future shapes in the next box
+// this should lead to better placements but at a large performance cost
+// not sure if this is worth doing
+// a few optimisations need to be made first before this even becomes viable
+#if 0
+					case 1:
+						// TODO use the actual probabilities to calculate the score
+						for (enum shape_type s = 0; s < N_SHAPES; ++s)
+							if (s != shape)
+								score += bfs(1 + depth, board_cpy, s,
+										(struct node [QUEUE_SIZE]){0}, result);
+						score /= 7;
+						break;
+					case 2:
+						score = eval(board_cpy);
+						break;
+#else
+					case 1:
+						score = eval(board_cpy);
+						break;
+#endif
+					default:
+						*(int *)0 = 200;
+				}
 				if (score >= best)
 					continue;
 				best = score;
-				if (shape_index == 0) *result = next;
+				if (depth == 0) *result = next;
 			}
 	}
 
@@ -98,7 +125,7 @@ static void search(inputs_t inputs, int *len)
 {
 	struct node nodes[QUEUE_SIZE];
 	struct node result = {0};
-	bfs(board, 0, nodes, &result);
+	bfs(0, board, shape_queue[0], nodes, &result);
 	memcpy(board_tmp, board, sizeof(board_t));
 	write(board_tmp, current_shape, result.x, result.y, result.r);
 
