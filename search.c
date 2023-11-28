@@ -1,7 +1,3 @@
-#include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
-
 #include "adt.c"
 
 #define HASH_SIZE	(1 << 6)
@@ -106,7 +102,7 @@ lock:
 						break;
 #endif
 					default:
-						*(int *)0 = 200;
+						unreachable();
 				}
 				if (score >= best)
 					continue;

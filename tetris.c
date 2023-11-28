@@ -1,7 +1,3 @@
-#include <stdbool.h>
-#include <assert.h>
-#include <stdio.h>
-
 #define HEIGHT 22
 #define WIDTH 10
 

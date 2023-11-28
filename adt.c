@@ -1,6 +1,3 @@
-#include <stdlib.h>
-#include <string.h>
-
 // allocate memory on stack
 #define salloc(size) (void *)(char [size]){0}
 

@@ -1,3 +1,12 @@
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define crash() do { *(int *)0 = 200; } while (0)
+#define unreachable() crash()
+#define assert(cond) if (cond) ; else unreachable();
+
 #include "tetris.c"
 
 static int eval(board_t board)
@@ -59,7 +68,7 @@ int main(void)
 						print_board(board);
 						puts("\nboard from search");
 						print_board(board_tmp);
-						*(int *)NULL = 200;
+						crash();
 					}
 					spawn = true;
 					running = spawn_shape();
@@ -68,4 +77,5 @@ int main(void)
 		}
 		draw();
 	}
+	return 0;
 }
