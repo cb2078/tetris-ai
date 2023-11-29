@@ -24,7 +24,7 @@ static void print_node(struct node *n)
 			n->frames);
 }
 
-static int bfs(int depth, board_t board, enum shape_type shape, struct node *nodes, struct node *result)
+static int bfs(int depth, board_t board, enum shape_type shape, int points, struct node *nodes, struct node *result)
 {
 	int best = 1000000;	// TODO should really use int max here
 
@@ -72,12 +72,13 @@ static int bfs(int depth, board_t board, enum shape_type shape, struct node *nod
 lock:
 				board_t board_cpy;
 				memcpy(board_cpy, board, sizeof(board_t));
-				write(board_cpy, shape, next.x, next.y, next.r);
+				int lines = write(board_cpy, shape, next.x, next.y, next.r);
 
 				int score = 0;
 				switch (depth) {
 					case 0:
 						score = bfs(1 + depth, board_cpy, shape_queue[1],
+								points + points_per_line[lines],
 								(struct node[QUEUE_SIZE]){0}, result);
 						break;
 // consider all future shapes in the next box
@@ -98,7 +99,7 @@ lock:
 						break;
 #else
 					case 1:
-						score = eval(board_cpy);
+						score = eval(board_cpy, points);
 						break;
 #endif
 					default:
@@ -121,7 +122,7 @@ static void search(inputs_t inputs, int *len)
 {
 	struct node nodes[QUEUE_SIZE];
 	struct node result = {0};
-	bfs(0, board, shape_queue[0], nodes, &result);
+	bfs(0, board, shape_queue[0], 0, nodes, &result);
 	memcpy(board_tmp, board, sizeof(board_t));
 	write(board_tmp, current_shape, result.x, result.y, result.r);
 

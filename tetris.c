@@ -13,8 +13,6 @@ int x, y, r;
 int frames = 0;
 int lines = 0;
 int level = 19;
-int score = 0;
-int soft_score = 0;
 
 typedef int board_t[HEIGHT][WIDTH];
 board_t board;
@@ -152,17 +150,12 @@ static bool row(board_t board, int i)
 }
 
 static int points_per_line[] = { 0, 40, 100, 300, 1200, };
-static void clear(board_t board)
+static int clear(board_t board)
 {
 	bool clears[HEIGHT];
 	int l = 0;
 	for (int i = 0; i < HEIGHT; ++i)
-	{
 		l += clears[i] = row(board, i);
-	}
-
-	score += points_per_line[l] * (level + 1) + soft_score;
-	soft_score = 0;
 
 	for (int i = HEIGHT - 1, k = 0; i >= 0; --i)
 	{
@@ -171,9 +164,11 @@ static void clear(board_t board)
 		for (int j = 0; j < WIDTH; ++j)
 			board[i][j] = i - k < 0 ? 0 : board[i - k][j];
 	}
+
+	return l;
 }
 
-static void write(board_t board, int shape, int x, int y, int r)
+static int write(board_t board, int shape, int x, int y, int r)
 {
 	assert(!collides(board, shape, x, y, r));
 	for (int i = 0; i < 4; ++i)
@@ -183,7 +178,7 @@ static void write(board_t board, int shape, int x, int y, int r)
 			if (cell)
 				board[y + i][x + j] = cell;
 		}
-	clear(board);
+	return clear(board);
 }
 
 static bool move(int dx, int dy, int dr)

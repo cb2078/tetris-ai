@@ -9,8 +9,10 @@
 
 #include "tetris.c"
 
-static int eval(board_t board)
+static int eval(board_t board, int score)
 {
+	(void)score;
+
 	int height = board_height(board);
 	int holes = board_holes(board);
 	float variance = board_variance(board);
