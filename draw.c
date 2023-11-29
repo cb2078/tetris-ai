@@ -49,7 +49,8 @@ static void draw(void)
 			}
 	}
 	// debug
-	DrawText(TextFormat("pos:\t%d %d %d\nlevel:\t%d", x, y, r, level),
+	DrawText(TextFormat("pos: %d %d %d\nlevel: %d\nlines: %d\npoints %d\ntetris rate %f%", x, y, r, level,
+				lines, points, (float)tetrises * 4 / lines * 100),
 			400, 10, 20, ORANGE);
 	for (int k = 0; k < N_SHAPES; ++k)
 		for (int i = 0; i < 4; ++i)

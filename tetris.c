@@ -145,7 +145,6 @@ static bool row(board_t board, int i)
 	for (int j = 0; j < WIDTH; ++j)
 		if (!board[i][j])
 			return false;
-	inc_level();
 	return true;
 }
 

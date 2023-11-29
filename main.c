@@ -21,6 +21,8 @@ static int eval(board_t board, int score)
 
 #include "search.c"
 
+int lines, points, tetrises;
+
 #include "draw.c"
 
 int main(void)
@@ -63,7 +65,11 @@ int main(void)
 			{
 				if (!move(0, 1, 0))
 				{
-					write(board, current_shape, x, y, r);
+					int new_lines = write(board, current_shape, x, y, r);
+					lines += new_lines;
+					points += points_per_line[new_lines] * (level + 1);
+					tetrises += new_lines == 4;
+
 					if (0 != memcmp(board, board_tmp, sizeof(board_t)))
 					{
 						puts("board");
