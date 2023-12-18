@@ -1,11 +1,5 @@
-Write a search function to find all the placements given a shape.  BFS should
-be sufficient for now.  Depends on a hash table for remembering visited
-positions and a queue for possible positions.
-
-Evaluation with neural network?  The inputs should be each cell in the board
-and the drop speed.  The drop speed is important on lower levels as it can
-afford to be more aggressive.
+Evaluation with value iteration. The inputs should be each cell in the board the drop speed and the change in score.
 
 Rienforcement learning CTM style.
 
-Maybe optmizations if this ends up being slow.
+Maybe optmizations if this ends up being slow. OpenMP SIMD / cores
