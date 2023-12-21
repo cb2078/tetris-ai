@@ -1,8 +1,6 @@
-#define HEIGHT 22
-#define WIDTH 10
+#include "board.c"
 
-#include "shape.c"
-#include "levels.c"
+board_t board;
 
 int shape_queue[2];
 #define current_shape	(shape_queue[0])
@@ -14,86 +12,7 @@ int frames = 0;
 int lines = 0;
 int level = 19;
 
-typedef int board_t[HEIGHT][WIDTH];
-board_t board;
-
-static void print_board(board_t board)
-{
-	for (int i = 0; i < HEIGHT; ++i)
-	{
-		for (int j = 0; j < WIDTH; ++j)
-			putchar(board[i][j] ? board[i][j] + '0' : '.');
-		putchar('\n');
-	}
-}
-
-static int board_height(board_t board)
-{
-	for (int i = 0; i < HEIGHT; ++i)
-		for (int j = 0; j < WIDTH; ++j)
-			if (board[i][j])
-				return HEIGHT - i;
-	return 0;
-}
-
-static float board_variance(board_t board)
-{
-	int sum = 0;
-	int heights[WIDTH] = {0};
-	for (int j = 0; j < WIDTH; ++j)
-	{
-		for (int i = 0; i < HEIGHT; ++i)
-			if (board[i][j])
-			{
-				sum += heights[j] = HEIGHT - i;
-				break;
-			}
-	}
-	float avg = (float)sum / 10;
-	float variance = 0;
-	for (int j = 0; j < WIDTH; ++j)
-	{
-		float diff = heights[j] - avg;
-		variance += diff > 0 ? diff : -diff;
-	}
-	return variance;
-}
-
-static int board_holes(board_t board)
-{
-	int holes = 0;
-	for (int j = 0; j < WIDTH; ++j)
-		for (int i = 0, flag = 0; i < HEIGHT; ++i)
-			if (board[i][j])
-				flag = 1;
-			else
-				holes += flag;
-	return holes;
-}
-
-static bool board_is_empty(board_t board)
-{
-	for (int i = 0; i < HEIGHT; ++i)
-		for (int j = 0; j < WIDTH; ++j)
-			if (board[i][j])
-				return false;
-	return true;
-}
-
-static bool collides(board_t board, int shape, int x, int y, int r)
-{
-	for (int i = 0; i < 4; ++i)
-		for (int j = 0; j < 4; ++j)
-		{
-			if (!shapes[shape][r][i][j])
-				continue;
-			int iy = i + y;
-			int jx = j + x;
-			if (iy < 0 || iy >= HEIGHT || jx < 0 || jx >= WIDTH || board[iy][jx])
-				return true;
-		}
-	return false;
-}
+static int points_per_line[] = { 0, 40, 100, 300, 1200, };
 
 static unsigned short random_int(void)
 {
@@ -140,46 +59,6 @@ static void inc_level(void)
 		level += lines % 10 == 0;
 }
 
-static bool row(board_t board, int i)
-{
-	for (int j = 0; j < WIDTH; ++j)
-		if (!board[i][j])
-			return false;
-	return true;
-}
-
-static int points_per_line[] = { 0, 40, 100, 300, 1200, };
-static int clear(board_t board)
-{
-	bool clears[HEIGHT];
-	int l = 0;
-	for (int i = 0; i < HEIGHT; ++i)
-		l += clears[i] = row(board, i);
-
-	for (int i = HEIGHT - 1, k = 0; i >= 0; --i)
-	{
-		while (clears[i - k])
-			++k;
-		for (int j = 0; j < WIDTH; ++j)
-			board[i][j] = i - k < 0 ? 0 : board[i - k][j];
-	}
-
-	return l;
-}
-
-static int write(board_t board, int shape, int x, int y, int r)
-{
-	assert(!collides(board, shape, x, y, r));
-	for (int i = 0; i < 4; ++i)
-		for (int j = 0; j < 4; ++j)
-		{
-			int cell = shapes[shape][r][i][j];
-			if (cell)
-				board[y + i][x + j] = cell;
-		}
-	return clear(board);
-}
-
 static bool move(int dx, int dy, int dr)
 {
 	if (collides(board, current_shape, x + dx, y + dy, (r + dr + 4) % 4))
@@ -194,4 +73,55 @@ static void init()
 {
 	next_shape = random_shape();
 	spawn_shape();
+}
+
+static int drop_speed(int l)
+{
+	switch (l) {
+		case 0:
+			return 48;
+		case 1:
+			return 43;
+		case 2:
+			return 38;
+		case 3:
+			return 33;
+		case 4:
+			return 28;
+		case 5:
+			return 23;
+		case 6:
+			return 18;
+		case 7:
+			return 13;
+		case 8:
+			return 8;
+		case 9:
+			return 6;
+		case 10:
+		case 11:
+		case 12:
+			return 5;
+		case 13:
+		case 14:
+		case 15:
+			return 4;
+		case 16:
+		case 17:
+		case 18:
+			return 3;
+		case 19:
+		case 20:
+		case 21:
+		case 22:
+		case 23:
+		case 24:
+		case 25:
+		case 26:
+		case 27:
+		case 28:
+			return 2;
+		default:
+			return 1;;
+	}
 }

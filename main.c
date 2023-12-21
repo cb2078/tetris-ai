@@ -28,7 +28,7 @@ int lines, points, tetrises;
 int main(void)
 {
 	InitWindow(800, 600, "tetris ai");
-	SetTargetFPS(60);
+	// SetTargetFPS(60);
 
 	init();
 
