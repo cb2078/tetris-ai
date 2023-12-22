@@ -1,4 +1,3 @@
-- Compare performance between each board implementation.
 - Rienforcement learning with super kill screen.
 - Maybe optmizations if this ends up being slow. OpenMP SIMD / cores
 
