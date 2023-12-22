@@ -45,7 +45,7 @@ static shape_t shape_get(int shape_type, int x, int r)
 // NOTE this may need an offset parameter if the shape has been bit shifted
 static int shape_at(shape_t shape, int i, int j)
 {
-	return 1 & shape >> j * 16 >> i + 3;
+	return 1 & shape >> i * 16 >> j + 3;
 }
 
 static int board_at(board_t board, int i, int j)

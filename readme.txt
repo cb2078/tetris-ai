@@ -1,4 +1,3 @@
-- Figure out why shapes are getting placed in weird positions with the bit board impelmenation.
 - Make the array board work with the new architecture.
 - Rienforcement learning with super kill screen.
 - Maybe optmizations if this ends up being slow. OpenMP SIMD / cores
