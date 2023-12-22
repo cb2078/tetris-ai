@@ -5,30 +5,21 @@
 
 #define crash() do { *(int *)0 = 200; } while (0)
 #define unreachable() crash()
-#define assert(cond) if (cond) ; else unreachable();
+#define assert(cond) if (cond) ; else { printf("assert at %s:%d\n", __FILE__, __LINE__); unreachable(); }
 
+#include "bitboard.c"
 #include "tetris.c"
-
-static int eval(board_t board, int score)
-{
-	(void)score;
-
-	int height = board_height(board);
-	int holes = board_holes(board);
-	float variance = board_variance(board);
-	return 5 * holes + (int)variance + 5 * height;
-}
-
+#include "adt.c"
 #include "search.c"
-
-int lines, points, tetrises;
-
 #include "draw.c"
+#include "test.c"
 
 int main(void)
 {
+	test_board();
+
 	InitWindow(800, 600, "tetris ai");
-	// SetTargetFPS(60);
+	SetTargetFPS(60);
 
 	init();
 

@@ -6,4 +6,5 @@
 *.lnk
 shell.bat
 
+generated
 raylib

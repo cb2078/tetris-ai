@@ -1,5 +1,3 @@
-#include "adt.c"
-
 #define HASH_SIZE	(1 << 6)
 #define QUEUE_SIZE	(WIDTH * 4)
 
@@ -22,6 +20,15 @@ static void print_node(struct node *n)
 			n->x, n->y, n->r,
 			n->dx, n->dr,
 			n->frames);
+}
+
+static int eval(board_t board, int score)
+{
+       (void)score;
+       int height = board_height(board);
+       int holes = board_holes(board);
+       float variance = board_variance(board);
+       return 5 * holes + (int)variance + 5 * height;
 }
 
 static int bfs(int depth, board_t board, enum shape_type shape, int points, struct node *nodes, struct node *result)

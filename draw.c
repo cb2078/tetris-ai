@@ -1,5 +1,7 @@
 #include "raylib.h"
 
+int lines, points, tetrises;
+
 static Color colours[9] = {
 	{0, 0, 0, 255},
 	{32, 32, 32, 255},
@@ -27,11 +29,11 @@ static void draw(void)
 	// board
 	for (int i = 2; i < HEIGHT; ++i)
 		for (int j = 0; j < WIDTH; ++j)
-			draw_cell(j, i, board[i][j]);
+			draw_cell(j, i, board_at(board, i, j));
 	// next box
 	for (int i = 0; i < 4; ++i)
 		for (int j = 0; j < 4; ++j)
-			draw_cell(j + WIDTH + 1, i + 2, shapes[shape_queue[1]][0][i][j]);
+			draw_cell(j + WIDTH + 1, i + 2, shape_at(shapes[next_shape][0], i, j));
 	// current shape
 	{
 		int k = y;
@@ -40,7 +42,7 @@ static void draw(void)
 		for (int i = 0; i < 4; ++i)
 			for (int j = 0; j < 4; ++j)
 			{
-				int cell = shapes[current_shape][r][i][j];
+				int cell = shape_at(shapes[current_shape][r], i, j);
 				if (cell)
 				{
 					// draw_cell(x + j, k + i, N_SHAPES + 1); // shadow
@@ -55,6 +57,6 @@ static void draw(void)
 	for (int k = 0; k < N_SHAPES; ++k)
 		for (int i = 0; i < 4; ++i)
 			for (int j = 0; j < 4; ++j)
-				draw_cell(WIDTH + 1 + k % 4 * 5 + j, 13 + i + k / 4 * 5, shapes[k][0][i][j]);
+				draw_cell(WIDTH + 1 + k % 4 * 5 + j, 13 + i + k / 4 * 5, shape_at(shapes[k][0], i,j));
 	EndDrawing();
 }

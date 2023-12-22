@@ -9,6 +9,16 @@ enum shape_type {
 	N_SHAPES,
 };
 
+char *shape_type_to_string[N_SHAPES] = {
+	[SHAPE_I] = "SHAPE_I",
+	[SHAPE_O] = "SHAPE_O",
+	[SHAPE_S] = "SHAPE_S",
+	[SHAPE_Z] = "SHAPE_Z",
+	[SHAPE_J] = "SHAPE_J",
+	[SHAPE_L] = "SHAPE_L",
+	[SHAPE_T] = "SHAPE_T",
+};
+
 int shapes[N_SHAPES][4][4][4] =
 {
 	[SHAPE_I] = {
@@ -316,4 +326,3 @@ static int write(board_t board, int shape, int x, int y, int r)
 		}
 	return clear(board);
 }
-

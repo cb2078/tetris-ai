@@ -1,5 +1,3 @@
-#include "board.c"
-
 board_t board;
 
 int shape_queue[2];
