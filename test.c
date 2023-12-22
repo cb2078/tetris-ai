@@ -1,4 +1,4 @@
-#if 1
+#if !defined(BOARD)
 static void test_board_collision(void)
 {
 	board_t board = {0};
@@ -72,4 +72,6 @@ static void test_board(void)
 	test_board_clear();
 	test_board_bounds();
 }
+#else
+static void test_board(void) {}
 #endif

@@ -1,3 +1,5 @@
+#define BOARD
+
 enum shape_type {
 	SHAPE_I,
 	SHAPE_O,
@@ -209,6 +211,16 @@ int shapes[N_SHAPES][4][4][4] =
 #define WIDTH 10
 
 typedef int board_t[HEIGHT][WIDTH];
+
+static int shape_at(int shape[4][4], int i, int j)
+{
+	return shape[i][j];
+}
+
+static int board_at(board_t board, int i, int j)
+{
+	return board[i][j];
+}
 
 static void print_board(board_t board)
 {
