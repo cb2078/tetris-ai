@@ -1,6 +1,7 @@
 *.exe
 *.rdbg
 shell.bat
+run.bat
 
 generated
 raylib
