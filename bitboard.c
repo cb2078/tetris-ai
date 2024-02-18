@@ -115,6 +115,65 @@ static float board_variance(board_t board)
 	return var;
 }
 
+static int board_row_transitions(board_t board)
+{
+	int result = 0;
+	static int mask = (1 << 8) - 1;
+	for (int i = 0; i < HEIGHT; ++i)
+		result += bit_count(board16[i] & ~board16[i] << 1 & ~(1 << WIDTH - 1));
+	return result;
+}
+
+static int board_col_transitions(board_t board)
+{
+	uint16_t *board16 = (uint16_t *)board;
+	int result = 0;
+	for (int i = 0; i < HEIGHT - 1; ++i)
+		result += bit_count(board16[i] & ~board16[i + 1]);
+	return result;
+}
+
+static int board_well_depth(board_t board, int j)
+{
+	int offset = j == 0 ? 0 : 1;
+	int mask = j == 0 || j == WIDTH - 1 ? 0b11 : 0b111;
+	int well = j == 0 ? 0b01 : j == WIDTH - 1? 0b10 : 0b111;
+	int bottom = mask;
+
+	int count = 0;
+	for (int i = 0; i < HEIGHT; ++i) {
+		int result = board[i] >> offset & mask;
+		if (result == bottom)
+			break;
+		else if (result == well)
+			++count;
+		else
+			count = 0;
+	}
+	return count;
+}
+
+static int board_wells(board_t board)
+{
+	int max_depth = 0;
+	int total_depth = 0;
+	for (int j = 0; j < WIDTH; ++j) {
+		int depth = board_well_depth(j);
+		if (depth > max_depth)
+			max_dpeth = depth;
+		total_depth += depth;
+	}
+	return total_depth - max_depth;
+}
+
+static int board_cell_count(board_t board)
+{
+	int result = 0;
+	for (int i = 0; i < 5; ++i)
+		result += bit_count(board[i]);
+	return result;
+}
+
 static bool collides(board_t board, int shape_type, int x, int y, int r)
 {
 	shape_t shape = shape_get(shape_type, x, r);
