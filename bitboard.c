@@ -117,6 +117,7 @@ static float board_variance(board_t board)
 
 static int board_row_transitions(board_t board)
 {
+	uint16_t *board16 = (uint16_t *)board;
 	int result = 0;
 	static int mask = (1 << 8) - 1;
 	for (int i = 0; i < HEIGHT; ++i)
@@ -158,9 +159,9 @@ static int board_wells(board_t board)
 	int max_depth = 0;
 	int total_depth = 0;
 	for (int j = 0; j < WIDTH; ++j) {
-		int depth = board_well_depth(j);
+		int depth = board_well_depth(board, j);
 		if (depth > max_depth)
-			max_dpeth = depth;
+			max_depth = depth;
 		total_depth += depth;
 	}
 	return total_depth - max_depth;

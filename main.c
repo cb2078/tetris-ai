@@ -7,7 +7,7 @@
 #define unreachable() crash()
 #define assert(cond) if (cond) ; else { printf("assert at %s:%d\n", __FILE__, __LINE__); unreachable(); }
 
-#include "board.c"
+#include "bitboard.c"
 #include "tetris.c"
 #include "adt.c"
 #include "search.c"
