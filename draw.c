@@ -29,7 +29,7 @@ static void draw(void)
 	// board
 	for (int i = 2; i < HEIGHT; ++i)
 		for (int j = 0; j < WIDTH; ++j)
-			draw_cell(j, i, board_at(board, i, j));
+			draw_cell(j, i, board_at(state.board, i, j));
 	// next box
 	for (int i = 0; i < 4; ++i)
 		for (int j = 0; j < 4; ++j)
@@ -37,12 +37,12 @@ static void draw(void)
 	// current shape
 	{
 		int k = y;
-		while (k < HEIGHT - 1 && !collides(board, current_shape, x, 1 + k, r))
+		while (k < HEIGHT - 1 && !collides(state.board, state.shape, x, 1 + k, r))
 			++k;
 		for (int i = 0; i < 4; ++i)
 			for (int j = 0; j < 4; ++j)
 			{
-				int cell = shape_at(shapes[current_shape][r], i, j);
+				int cell = shape_at(shapes[state.shape][r], i, j);
 				if (cell)
 				{
 					// draw_cell(x + j, k + i, N_SHAPES + 1); // shadow
@@ -51,7 +51,7 @@ static void draw(void)
 			}
 	}
 	// debug
-	DrawText(TextFormat("pos: %d %d %d\nlevel: %d\nlines: %d\npoints %d\ntetris rate %f%", x, y, r, level,
+	DrawText(TextFormat("pos: %d %d %d\nlevel: %d\nlines: %d\npoints %d\ntetris rate %f%", x, y, r, state.level,
 				lines, points, (float)tetrises * 4 / lines * 100),
 			400, 10, 20, ORANGE);
 	for (int k = 0; k < N_SHAPES; ++k)
