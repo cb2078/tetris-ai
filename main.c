@@ -3,7 +3,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define crash() do { *(int *)0 = 200; } while (0)
+#if 1
+#define WIN32_LEAN_AND_MEAN
+#include <intrin.h>
+#define breakpoint() __debugbreak()
+#else
+#define breakpoint()
+#endif
+
+#define crash() do { breakpoint(); *(int *)0 = 200; } while (0)
 #define unreachable() crash()
 #define assert(cond) if (cond) ; else { printf("assert at %s:%d\n", __FILE__, __LINE__); unreachable(); }
 
@@ -24,7 +32,7 @@ board_t board_expected;
 static void find_inputs(struct state *state, struct input inputs[WIDTH], int *len)
 {
 	struct state states[40];
-	struct state *next = search(state, states, 2);
+	struct state *next = search(state, states, SEARCH_DEPTH);
 	memcpy(board_expected, next->board, sizeof(board_t));
 
 	memset(inputs, 0, sizeof(struct input) * WIDTH);

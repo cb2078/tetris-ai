@@ -1,22 +1,21 @@
 #define HASH_SIZE	(1 << 6)
 #define QUEUE_SIZE	(WIDTH * 4)
+#define SEARCH_DEPTH	2
 
 static float ALPHA = 0.01f;
 static float EPSILON = 0.01f;
 static float GAMMA = 0.9f;
 static float ITERATIONS = 10000;
 
-#define eval q_linear
-
-static float simple_eval(struct state *s)
-{
-       int height = board_height(s->board);
-       int holes = board_holes(s->board);
-       float variance = board_variance(s->board);
-       return 5 * holes + variance + 5 * height;
-}
-
 static float weights[5] = {0};
+static void q_linear_update(float delta, struct state *s)
+{
+	weights[0] += ALPHA * delta * board_row_transitions(s->board);
+	weights[1] += ALPHA * delta * board_col_transitions(s->board);
+	weights[2] += ALPHA * delta * board_wells(s->board);
+	weights[3] += ALPHA * delta * board_cell_count(s->board);
+	weights[4] += ALPHA * delta * drop_speed(s->level);
+}
 
 static float q_linear(struct state *s)
 {
@@ -28,13 +27,24 @@ static float q_linear(struct state *s)
 		weights[4] * drop_speed(s->level);
 }
 
-static void q_linear_update(float delta, struct state *s)
+static float simple_eval(struct state *s)
 {
-	weights[0] += ALPHA * delta * board_row_transitions(s->board);
-	weights[1] += ALPHA * delta * board_col_transitions(s->board);
-	weights[2] += ALPHA * delta * board_wells(s->board);
-	weights[3] += ALPHA * delta * board_cell_count(s->board);
-	weights[4] += ALPHA * delta * drop_speed(s->level);
+       int height = board_height(s->board);
+       int holes = board_holes(s->board);
+       float variance = board_variance(s->board);
+       return 5 * holes + variance + 5 * height;
+}
+
+static inline float eval(struct state *s)
+{
+	return simple_eval(s);
+}
+
+static void print_state(struct state *s)
+{
+	printf("level: %d, lines: %d, shape: %d\n", s->level, s->lines, s->shape);
+	printf("x: %d, y: %d, r: %d\n", s->last_placement.x, s->last_placement.y, s->last_placement.r);
+	print_board(s->board);
 }
 
 struct node {
@@ -106,30 +116,29 @@ lock:
 	}
 }
 
-#define eval q_linear
 static struct state *search(struct state *state, struct state states[40], unsigned depth)
 {
 	if (depth == 0)
 		return state;
 	unsigned length;
 	expand(state, states, &length);
-	float max = -1e9;
-	int arg_max = - 1;
+	float min = 1e9;
+	int arg_min = - 1;
 	for (unsigned i = 0; i < length; ++i) {
 		struct state child_states[40];
 		float result = eval(search(&states[i], child_states, depth - 1));
-		if (result > max) {
-			max = result;
-			arg_max = i;
+		if (result < min) {
+			min = result;
+			arg_min = i;
 		}
 	}
-	assert(arg_max != -1);
-	return &states[arg_max];
+	assert(arg_min != -1);
+	return &states[arg_min];
 }
 
-static struct state *state_max_q(struct state *state, struct state states[40])
+static struct state *state_min_q(struct state *state, struct state states[40])
 {
-	return search(state, states, 2);
+	return search(state, states, SEARCH_DEPTH);
 }
 
 static struct state *select_epsilon_greedy(struct state *state, struct state states[40])
@@ -138,7 +147,7 @@ static struct state *select_epsilon_greedy(struct state *state, struct state sta
 	expand(state, states, &length);
 	if ((float)rand() / RAND_MAX < EPSILON)
 		return &states[rand() * length / RAND_MAX];
-	return state_max_q(state, states);
+	return state_min_q(state, states);
 }
 
 static struct state *select_epsilon_decreasing(struct state *state, struct state states[40]);
