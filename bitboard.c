@@ -102,13 +102,13 @@ static float board_variance(board_t board)
 			uint64_t result =  board[i] >> j & col_mask;
 			if (!result)
 				continue;
-			heights[j] += i * 4;
-			for (; !(result & 1); result >>= 16)
+			heights[j] = (4 - i) * 4 + 1;
+			while (result <<= 16)
 				++heights[j];
 			sum += heights[j];
 			break;
 		}
-	float avg = (float)sum / 10;
+	float avg = (float)sum / WIDTH;
 	float var = 0;
 	for (int j = 0; j < WIDTH; ++j)
 		var += heights[j] > avg ? heights[j] - avg : avg - heights[j];
