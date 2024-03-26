@@ -1,8 +1,10 @@
 *.exe
+*.ilk
+*.obj
+*.pdb
 *.rdbg
-shell.bat
 run.bat
+shell.bat
 
 generated
 raylib
-build
