@@ -276,6 +276,24 @@ static int board_holes(board_t board)
 	return holes;
 }
 
+static int board_row_transitions(board_t board)
+{
+	int result = 0;
+	for (int i = 0; i < HEIGHT; ++i)
+		for (int j = 0; j < WIDTH - 1; ++j)
+			result += board[i][j] && !board[i][j + 1];
+	return result;
+}
+
+static int board_col_transitions(board_t board)
+{
+	int result = 0;
+	for (int i = 0; i < HEIGHT - 1; ++i)
+		for (int j = 0; j < WIDTH; ++j)
+			result += board[i][j] & !board[i + 1][j];
+	return result;
+}
+
 static bool board_is_empty(board_t board)
 {
 	for (int i = 0; i < HEIGHT; ++i)
@@ -283,6 +301,45 @@ static bool board_is_empty(board_t board)
 			if (board[i][j])
 				return false;
 	return true;
+}
+
+static int board_well_depth(board_t board, int j)
+{
+	int count = 0;
+	for (int i = 0; i < HEIGHT; ++i) {
+		if ((j > 0 && board[i][j - 1] != 0) &&
+		    (j < WIDTH - 1 && board[i][j + 1] != 0)) {
+			if (board[i][j] != 0)
+				break;
+			else
+				++count;
+		}
+		else
+			count = 0;
+	}
+	return count;
+}
+
+static int board_wells(board_t board)
+{
+	int max_depth = 0;
+	int total_depth = 0;
+	for (int j = 0; j < WIDTH; ++j) {
+		int depth = board_well_depth(board, j);
+		if (depth > max_depth)
+			max_depth = depth;
+		total_depth += depth;
+	}
+	return total_depth - max_depth;
+}
+
+static int board_cell_count(board_t board)
+{
+	int result = 0;
+	for (int i = 0; i < HEIGHT; ++i)
+		for (int j = 0; j < WIDTH; ++j)
+			result += board[i][j] != 0;
+	return result;
 }
 
 static bool collides(board_t board, int shape, int x, int y, int r)

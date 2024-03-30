@@ -119,9 +119,9 @@ static int board_row_transitions(board_t board)
 {
 	uint16_t *board16 = (uint16_t *)board;
 	int result = 0;
-	static int mask = (1 << 8) - 1;
+	static int mask = ~((1 << WIDTH - 1) - 1);
 	for (int i = 0; i < HEIGHT; ++i)
-		result += bit_count(board16[i] & ~board16[i] << 1 & ~(1 << WIDTH - 1));
+		result += bit_count(board16[i] & ~board16[i] << 1 & mask);
 	return result;
 }
 
