@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #if 1
 #define WIN32_LEAN_AND_MEAN
@@ -29,6 +30,7 @@ struct input {
 
 board_t board_expected;
 // NOTE the inputs array is be sparse
+// NOTE this doesn't work when the placement is very high
 static void find_inputs(struct state *state, struct input inputs[WIDTH], int *len)
 {
 	struct state states[40];

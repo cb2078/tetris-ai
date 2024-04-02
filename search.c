@@ -7,24 +7,28 @@ static float EPSILON = 0.01f;
 static float GAMMA = 0.9f;
 static float ITERATIONS = 10000;
 
-static float weights[5] = {0};
+static float weights[3] = {50, 50, 10};
 static void q_linear_update(float delta, struct state *s)
 {
-	weights[0] += ALPHA * delta * board_row_transitions(s->board);
-	weights[1] += ALPHA * delta * board_col_transitions(s->board);
-	weights[2] += ALPHA * delta * board_wells(s->board);
-	weights[3] += ALPHA * delta * board_cell_count(s->board);
-	weights[4] += ALPHA * delta * drop_speed(s->level);
+	weights[0] += ALPHA * delta * board_height(s->board);
+	weights[1] += ALPHA * delta * board_holes(s->board);
+	weights[2] += ALPHA * delta * board_variance(s->board);
+
+	// normalize weights
+	float dot = 0;
+	for (int i = 0; i < 3; ++i)
+		dot += weights[i] * weights[i];
+	float mag = sqrtf(dot);
+	for (int i = 0; i < 3; ++i)
+		weights[i] = weights[i] / mag * 100;
 }
 
 static float q_linear(struct state *s)
 {
 	return
-		weights[0] * board_row_transitions(s->board) +
-		weights[1] * board_col_transitions(s->board) +
-		weights[2] * board_wells(s->board) +
-		weights[3] * board_cell_count(s->board) +
-		weights[4] * drop_speed(s->level);
+		weights[0] * board_height(s->board) +
+		weights[1] * board_holes(s->board) +
+		weights[2] * board_variance(s->board);
 }
 
 static float simple_eval(struct state *s)
@@ -37,7 +41,7 @@ static float simple_eval(struct state *s)
 
 static inline float eval(struct state *s)
 {
-	return simple_eval(s);
+	return q_linear(s);
 }
 
 static void print_state(struct state *s)
@@ -107,7 +111,7 @@ lock:
 #else
 				memcpy(&states[*length], state, sizeof(struct state));
 #endif
-				states[*length].lines = write(states[*length].board, state->shape, next.x, next.y, next.r);
+				states[*length].lines += write(states[*length].board, state->shape, next.x, next.y, next.r);
 				states[*length].last_placement.x = next.x;
 				states[*length].last_placement.y = next.y;
 				states[*length].last_placement.r = next.r;
@@ -128,13 +132,21 @@ static struct state *search(struct state *state, struct state states[40], unsign
 	int arg_min = - 1;
 	for (unsigned i = 0; i < length; ++i) {
 		struct state child_states[40];
-		float result = eval(search(&states[i], child_states, depth - 1));
+		struct state *next = search(&states[i], child_states, depth - 1);
+		if (!next)
+			continue;
+		float result = eval(next);
 		if (result < min) {
 			min = result;
 			arg_min = i;
 		}
 	}
+#if 0
 	assert(arg_min != -1);
+#else
+	if (arg_min == -1)
+		return NULL;
+#endif
 	return &states[arg_min];
 }
 
@@ -157,14 +169,16 @@ static struct state *select_epsilon_decreasing(struct state *state, struct state
 static void q_learning(void)
 {
 	for (int i = 0; i < ITERATIONS; ++i) {
+		struct state state = { .lines = 19, };
 		struct state states[40];
-		struct state *state = &states[0]; memset(state, 0, sizeof(struct state));
-		while (state) {
-			struct state *new_state = select_epsilon_greedy(state, states);
+		for (;;) {
+			struct state *new_state = select_epsilon_greedy(&state, states);
+			if (!new_state)
+				break;
 			float reward = (float)points_per_line[new_state->lines];
-			float delta = reward + GAMMA * q_linear(new_state) - q_linear(state);
+			float delta = reward + GAMMA * q_linear(new_state) - q_linear(&state);
 			q_linear_update(delta, new_state);
-			state = new_state;
+			memcpy(&state, new_state, sizeof(struct state));
 		}
 	}
 }
