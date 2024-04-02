@@ -111,6 +111,8 @@ lock:
 				states[*length].last_placement.x = next.x;
 				states[*length].last_placement.y = next.y;
 				states[*length].last_placement.r = next.r;
+				// NOTE this is a hack and should be handled in the write function
+				states[*length].shape = next_shape;
 				*length += 1;
 			}
 	}
