@@ -1,3 +1,5 @@
+unsigned char shape_queue[20000];
+
 struct state {
 	board_t board;
 	int level;
@@ -9,6 +11,7 @@ struct state {
 	int frames;
 	int last_input;
 	bool spawn;
+	int shape_queue_i;
 } state = {
 	.level = 19,
 };
@@ -46,7 +49,10 @@ static int random_shape(void)
 static bool spawn_shape(struct state *s)
 {
 	s->shape = s->next_shape;
-	s->next_shape = random_shape();
+	s->shape_queue_i += 1;
+	s->shape_queue_i %= 20000;
+	s->next_shape = shape_queue[s->shape_queue_i];
+
 	s->x = 3;
 	s->y = 1;
 	s->r = 0;
@@ -79,7 +85,9 @@ static bool move(struct state *s, int dx, int dy, int dr)
 
 static void init(struct state *s)
 {
-	s->next_shape = random_shape();
+	for (int i = 0; i < 20000; ++i)
+		shape_queue[i] = (char)random_shape();
+	s->next_shape = shape_queue[0];
 	spawn_shape(s);
 }
 
