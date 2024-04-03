@@ -1,6 +1,7 @@
-#define HASH_SIZE	(1 << 6)
-#define QUEUE_SIZE	(WIDTH * 4)
-#define SEARCH_DEPTH	2
+#define HASH_SIZE (1 << 6)
+#define QUEUE_SIZE (WIDTH * 4)
+#define SEARCH_DEPTH 2
+#define STATE_COUNT QUEUE_SIZE
 
 static float ALPHA = 0.01f;
 static float EPSILON = 0.01f;
@@ -51,78 +52,55 @@ static void print_state(struct state *s)
 	print_board(s->board);
 }
 
-struct node {
-	int x, y, r;
-	int frames;
-};
+#define HASH(x, r) ((x) + 4 | (r) << 4)
 
-static unsigned node_hash(struct node *n)
+static void expand(struct state *state, struct state states[STATE_COUNT], unsigned *length)
 {
-	// 4 bits for x, 2 bits for r
-	return n->x + 4 | n->r << 4;
-}
-
-static void print_node(struct node *n)
-{
-	printf("x %2d\ty %d\tr %d\tframes %d\n", n->x, n->y, n->r, n->frames);
-}
-
-static void expand(struct state *state, struct state states[40], unsigned *length)
-{
-	*length = 0;
 	bit_set_t visited = bit_set_new(HASH_SIZE);
+	bit_set_add(visited, HASH(state->x, state->r));
 
-	struct node nodes[40] = { [0] = { 3, 1, 0, 0, }, };
-	struct node *queue_front = nodes;
-	struct node *queue_back = nodes + 1;
+	*length = 0;
+	struct state queue[QUEUE_SIZE] = {*state};
+	struct state *queue_front = queue;
+	struct state *queue_back = queue + 1;
 	while (queue_back  > queue_front) {
-		struct node *cur = queue_front++;
+		struct state *cur = queue_front++;
 
 		for (int dx = -1; dx <= 1; ++dx)
 			for (int dr = -1; dr <= 1; ++dr) {
-				struct node next = *cur;
-				next.x += dx;
-				next.r += dr + 4;
-				next.r %= 4;
+				struct state next = *cur;
+				int result;
 
-				unsigned hash = node_hash(&next);
+				// move left / right and rotate
+				result &= tick(&next, get_dir(dx, dr));
+
+				unsigned hash = HASH(next.x, next.r);
 				if (bit_set_contains(visited, hash))
 					continue;
 				bit_set_add(visited, hash);
 
-				if (collides(state->board, state->shape, next.x, next.y, next.r))
-					continue;
-				for (int i = 0; i < 2; ++i) {
-					next.frames++;
-					int dy = next.frames % drop_speed(state->level) == 0;
-					if (dy && collides(state->board, state->shape, next.x, next.y + dy, next.r))
+				// wait 1 frame between inputs
+				result &= tick(&next, 0);
+				if (result & WRITE)
 						goto lock;
-					next.y += dy;
-				}
 
 				*queue_back++ = next;
-				assert(queue_back - nodes < QUEUE_SIZE);
+				assert(queue_back - queue < QUEUE_SIZE);
 
-				while (!collides(state->board, state->shape, next.x, next.y + 1, next.r))
-					next.y += 1;
+				// do a "soft drop"
+				while (!(WRITE & tick(&next, 0)));
 lock:
-#if 0
-				memcpy(states[*length].board, state->board, sizeof(board_t));
-#else
-				memcpy(&states[*length], state, sizeof(struct state));
-#endif
-				states[*length].lines += write(states[*length].board, state->shape, next.x, next.y, next.r);
-				states[*length].last_placement.x = next.x;
-				states[*length].last_placement.y = next.y;
-				states[*length].last_placement.r = next.r;
-				// NOTE this is a hack and should be handled in the write function
-				states[*length].shape = next_shape;
-				*length += 1;
+				// update the last placement
+				next.last_placement.x = next.x;
+				next.last_placement.y = next.y;
+				next.last_placement.r = next.r;
+
+				states[(*length)++] = next;
 			}
 	}
 }
 
-static struct state *search(struct state *state, struct state states[40], unsigned depth)
+static struct state *search(struct state *state, struct state states[STATE_COUNT], unsigned depth)
 {
 	if (depth == 0)
 		return state;
@@ -131,7 +109,7 @@ static struct state *search(struct state *state, struct state states[40], unsign
 	float min = 1e9;
 	int arg_min = - 1;
 	for (unsigned i = 0; i < length; ++i) {
-		struct state child_states[40];
+		struct state child_states[STATE_COUNT];
 		struct state *next = search(&states[i], child_states, depth - 1);
 		if (!next)
 			continue;
@@ -141,21 +119,15 @@ static struct state *search(struct state *state, struct state states[40], unsign
 			arg_min = i;
 		}
 	}
-#if 0
-	assert(arg_min != -1);
-#else
-	if (arg_min == -1)
-		return NULL;
-#endif
-	return &states[arg_min];
+	return arg_min == -1 ? NULL : &states[arg_min];
 }
 
-static struct state *state_min_q(struct state *state, struct state states[40])
+static struct state *state_min_q(struct state *state, struct state states[STATE_COUNT])
 {
 	return search(state, states, SEARCH_DEPTH);
 }
 
-static struct state *select_epsilon_greedy(struct state *state, struct state states[40])
+static struct state *select_epsilon_greedy(struct state *state, struct state states[STATE_COUNT])
 {
 	unsigned length;
 	expand(state, states, &length);
@@ -164,13 +136,13 @@ static struct state *select_epsilon_greedy(struct state *state, struct state sta
 	return state_min_q(state, states);
 }
 
-static struct state *select_epsilon_decreasing(struct state *state, struct state states[40]);
+static struct state *select_epsilon_decreasing(struct state *state, struct state states[STATE_COUNT]);
 
 static void q_learning(void)
 {
 	for (int i = 0; i < ITERATIONS; ++i) {
 		struct state state = { .lines = 19, };
-		struct state states[40];
+		struct state states[STATE_COUNT];
 		for (;;) {
 			struct state *new_state = select_epsilon_greedy(&state, states);
 			if (!new_state)

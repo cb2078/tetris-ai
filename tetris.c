@@ -1,16 +1,15 @@
-int x, y, r;
-int frames = 0;
-int next_shape;
-
 struct state {
 	board_t board;
 	int level;
 	int lines;
-	int shape;
+	int shape, next_shape;
 	struct { int x, y, r; } last_placement;
-};
 
-struct state state = {
+	int x, y, r;
+	int frames;
+	int last_input;
+	bool spawn;
+} state = {
 	.level = 19,
 };
 
@@ -44,15 +43,15 @@ static int random_shape(void)
 	return i;
 }
 
-static bool spawn_shape(void)
+static bool spawn_shape(struct state *s)
 {
-	state.shape = next_shape;
-	next_shape = random_shape();
-	x = 3;
-	y = 1;
-	r = 0;
-	frames = 0;
-	return !collides(state.board, state.shape, x, y, r);
+	s->shape = s->next_shape;
+	s->next_shape = random_shape();
+	s->x = 3;
+	s->y = 1;
+	s->r = 0;
+	s->frames = 0;
+	return !collides(state.board, s->shape, s->x, s->y, s->r);
 }
 
 static void inc_level(struct state *s)
@@ -64,18 +63,24 @@ static void inc_level(struct state *s)
 
 static bool move(struct state *s, int dx, int dy, int dr)
 {
-	if (collides(s->board, s->shape, x + dx, y + dy, (r + dr + 4) % 4))
+	if (collides(s->board, s->shape, s->x + dx, s->y + dy, (s->r + dr + 4) % 4)) {
+		if (dy) {
+			s->lines += write(s->board, s->shape, s->x, s->y, s->r);
+			s->spawn = true;
+		}
 		return false;
-	x += dx;
-	y += dy;
-	r = (r + dr + 4) % 4;
+	}
+	s->x += dx;
+	s->y += dy;
+	s->r += dr + 4;
+	s->r %= 4;
 	return true;
 }
 
-static void init()
+static void init(struct state *s)
 {
-	next_shape = random_shape();
-	spawn_shape();
+	s->next_shape = random_shape();
+	spawn_shape(s);
 }
 
 static int drop_speed(int l)
@@ -127,4 +132,73 @@ static int drop_speed(int l)
 		default:
 			return 1;;
 	}
+}
+
+enum input {
+	UP      = 0x01,
+	DOWN    = 0x02,
+	LEFT    = 0x04,
+	RIGHT   = 0x08,
+	ROT_CW  = 0x10,
+	ROT_ACW = 0x20,
+};
+
+enum event {
+	WRITE = 0x01,
+	END   = 0x02,
+};
+
+// advance the game by one frame
+static int tick(struct state *s, int input)
+{
+	// random_int();
+	++s->frames;
+
+	if (s->spawn) {
+		if (!spawn_shape(s))
+			return END;
+		s->spawn = false;
+		s->frames = 0;
+	}
+
+	// rotate clockwise / anti clockwise
+	switch (input & ~s->last_input & (ROT_CW | ROT_ACW)) {
+		case ROT_CW:
+			move(s, 0, 0, -1);
+			break;
+		case ROT_ACW:
+			move(s, 0, 0, 1);
+			break;
+		default:
+			break;
+	}
+
+	// gravity
+	// TODO check that this is correct from the NES assembly
+	if (0 == s->frames % drop_speed(s->level))
+		if (!move(s, 0, 1, 0))
+			return WRITE;
+
+	int dir = input & RIGHT ? 1 : input & LEFT ? -1 : 0;
+	// move left / right
+	if (input & ~s->last_input & (LEFT | RIGHT))
+		move(s, dir, 0, 0);
+
+	s->last_input = input;
+	return 0;
+}
+
+static int get_dir_x(int dx)
+{
+	return dx == 1 ? RIGHT : dx == -1 ? LEFT : 0;
+}
+
+static int get_dir_r(int dr)
+{
+	return dr == -1 ? ROT_CW : dr == 1 ? ROT_ACW : 0;
+}
+
+static int get_dir(int dx, int dr)
+{
+	return get_dir_x(dx) | get_dir_r(dr);
 }
