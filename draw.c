@@ -1,7 +1,5 @@
 #include "raylib.h"
 
-int lines, points, tetrises;
-
 static Color colours[9] = {
 	{0, 0, 0, 255},
 	{255, 255, 255, 255},
@@ -21,7 +19,7 @@ static void draw_cell(int x, int y, int c)
 	DrawRectangle((x + 1) * width, (y - 1) * width, width, width, colours[c]);
 }
 
-static void draw(void)
+static void draw(struct state *s)
 {
 	BeginDrawing();
 	ClearBackground(COLOUR_BG);
@@ -29,30 +27,32 @@ static void draw(void)
 	// board
 	for (int i = 2; i < HEIGHT; ++i)
 		for (int j = 0; j < WIDTH; ++j)
-			draw_cell(j, i, board_at(state.board, i, j));
+			draw_cell(j, i, board_at(s->board, i, j));
 	// next box
 	for (int i = 0; i < 4; ++i)
-		for (int j = 0; j < 4; ++j)
-			draw_cell(j + WIDTH + 1, i + 2, shape_at(shapes[state.next_shape][0], i, j));
+		for (int j = 0; j < 4; ++j) {
+			draw_cell(j + WIDTH + 1, i + 2, shape_at(shapes[s->next_shape][0], i, j));
+			draw_cell(j + WIDTH + 1, i + 7, shape_at(shapes[shape_queue[s->shape_queue_i + 2]][0], i, j));
+		}
 	// current shape
 	{
-		int k = state.y;
-		while (k < HEIGHT - 1 && !collides(state.board, state.shape, state.x, 1 + k, state.r))
+		int k = s->y;
+		while (k < HEIGHT - 1 && !collides(s->board, s->shape, s->x, 1 + k, s->r))
 			++k;
 		for (int i = 0; i < 4; ++i)
 			for (int j = 0; j < 4; ++j)
 			{
-				int cell = shape_at(shapes[state.shape][state.r], i, j);
+				int cell = shape_at(shapes[s->shape][s->r], i, j);
 				if (cell)
 				{
 					// draw_cell(x + j, k + i, N_SHAPES + 1); // shadow
-					draw_cell(state.x + j, state.y + i, cell);
+					draw_cell(s->x + j, s->y + i, cell);
 				}
 			}
 	}
 	// debug
-	DrawText(TextFormat("pos: %d %d %d\nlevel: %d\nlines: %d\npoints %d\ntetris rate %f%", state.x, state.y, state.r, state.level,
-				lines, points, (float)tetrises * 4 / lines * 100),
+	DrawText(TextFormat("pos: %d %d %d\nlevel: %d\nlines: %d\npoints %d", s->x, s->y, s->r, s->level,
+				s->lines, s->points),
 			400, 10, 20, ORANGE);
 	for (int k = 0; k < N_SHAPES; ++k)
 		for (int i = 0; i < 4; ++i)

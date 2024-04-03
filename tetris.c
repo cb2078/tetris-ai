@@ -3,7 +3,7 @@ unsigned char shape_queue[20000];
 struct state {
 	board_t board;
 	int level;
-	int lines;
+	int lines, points;
 	int shape, next_shape;
 	struct { int x, y, r; } last_placement;
 
@@ -12,8 +12,6 @@ struct state {
 	int last_input;
 	bool spawn;
 	int shape_queue_i;
-} state = {
-	.level = 19,
 };
 
 static int points_per_line[] = { 0, 40, 100, 300, 1200, };
@@ -30,20 +28,21 @@ static unsigned short random_int(void)
 
 static int random_shape(void)
 {
+	static int last = -1;
 	static int shapes = 0;
 	static int spawn_id[N_SHAPES] = { 0x12, 0x0a, 0x0b, 0x08, 0x07, 0x0e, 0x02, };
 
 	unsigned char i = random_int() >> 8;
 	i += (unsigned char)++shapes;
 	i &= 7;
-	if (7 == i || i == state.shape)
+	if (7 == i || i == last)
 	{
 		i = random_int() >> 8;
 		i &= 7;
-		i += (unsigned char)state.shape;
+		i += (unsigned char)last;
 		i %= 7;
 	}
-	return i;
+	return last = i;
 }
 
 static bool spawn_shape(struct state *s)
@@ -57,7 +56,7 @@ static bool spawn_shape(struct state *s)
 	s->y = 1;
 	s->r = 0;
 	s->frames = 0;
-	return !collides(state.board, s->shape, s->x, s->y, s->r);
+	return !collides(s->board, s->shape, s->x, s->y, s->r);
 }
 
 static void inc_level(struct state *s)
@@ -71,7 +70,9 @@ static bool move(struct state *s, int dx, int dy, int dr)
 {
 	if (collides(s->board, s->shape, s->x + dx, s->y + dy, (s->r + dr + 4) % 4)) {
 		if (dy) {
-			s->lines += write(s->board, s->shape, s->x, s->y, s->r);
+			int lines = write(s->board, s->shape, s->x, s->y, s->r);
+			s->lines += lines;
+			s->points += (1 + s->level) * points_per_line[lines];
 			s->spawn = true;
 		}
 		return false;
