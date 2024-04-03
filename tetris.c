@@ -14,7 +14,7 @@ struct state {
 	int shape_queue_i;
 };
 
-static int points_per_line[] = { 0, 40, 100, 300, 1200, };
+static int points_per_line[] = {0, 40, 100, 300, 1200};
 
 static unsigned short random_int(void)
 {
@@ -30,7 +30,7 @@ static int random_shape(void)
 {
 	static int last = -1;
 	static int shapes = 0;
-	static int spawn_id[N_SHAPES] = { 0x12, 0x0a, 0x0b, 0x08, 0x07, 0x0e, 0x02, };
+	static int spawn_id[N_SHAPES] = {0x12, 0x0a, 0x0b, 0x08, 0x07, 0x0e, 0x02};
 
 	unsigned char i = random_int() >> 8;
 	i += (unsigned char)++shapes;
@@ -71,8 +71,9 @@ static bool move(struct state *s, int dx, int dy, int dr)
 	if (collides(s->board, s->shape, s->x + dx, s->y + dy, (s->r + dr + 4) % 4)) {
 		if (dy) {
 			int lines = write(s->board, s->shape, s->x, s->y, s->r);
-			s->lines += lines;
 			s->points += (1 + s->level) * points_per_line[lines];
+			s->lines += lines;
+			inc_level(s);
 			s->spawn = true;
 		}
 		return false;

@@ -62,7 +62,7 @@ int main(void)
 	InitWindow(800, 600, "tetris ai");
 	SetTargetFPS(60);
 
-	struct state state = { .level = 19, };
+	struct state state = { .level = 18, };
 	init(&state);
 	find_inputs(&state);
 
