@@ -69,11 +69,11 @@ static void expand(struct state *state, struct state states[STATE_COUNT], unsign
 		for (int dx = -1; dx <= 1; ++dx)
 			for (int dr = -1; dr <= 1; ++dr) {
 				struct state next = *cur;
-				int result = 0;
+				int result;
 
 				// move left / right and rotate
-				result |= tick(&next, get_dir(dx, dr));
-				if (result & WRITE)
+				result = tick(&next, get_dir(dx, dr));
+				if (result)
 					continue;
 
 				unsigned hash = HASH(next.x, next.r);
@@ -82,9 +82,11 @@ static void expand(struct state *state, struct state states[STATE_COUNT], unsign
 				bit_set_add(visited, hash);
 
 				// wait 1 frame between inputs
-				result |= tick(&next, 0);
+				result = tick(&next, 0);
 				if (result & WRITE)
 						goto lock;
+				if (result & END)
+						continue;
 
 				*queue_back++ = next;
 				assert(queue_back - queue < QUEUE_SIZE);
