@@ -8,41 +8,16 @@ static float EPSILON = 0.01f;
 static float GAMMA = 0.9f;
 static float ITERATIONS = 10000;
 
-static float weights[3] = {50, 50, 10};
-static void q_linear_update(float delta, struct state *s)
-{
-	weights[0] += ALPHA * delta * board_height(s->board);
-	weights[1] += ALPHA * delta * board_holes(s->board);
-	weights[2] += ALPHA * delta * board_variance(s->board);
+static float weights[3] = {0.45f, 0.45f, 0.10f};
 
-	// normalize weights
-	float dot = 0;
-	for (int i = 0; i < 3; ++i)
-		dot += weights[i] * weights[i];
-	float mag = sqrtf(dot);
-	for (int i = 0; i < 3; ++i)
-		weights[i] = weights[i] / mag * 100;
-}
+static void normalize_weights(void);
 
-static float q_linear(struct state *s)
+static float eval(struct state *s)
 {
 	return
 		weights[0] * board_height(s->board) +
 		weights[1] * board_holes(s->board) +
 		weights[2] * board_variance(s->board);
-}
-
-static float simple_eval(struct state *s)
-{
-       int height = board_height(s->board);
-       int holes = board_holes(s->board);
-       float variance = board_variance(s->board);
-       return 5 * holes + variance + 5 * height;
-}
-
-static inline float eval(struct state *s)
-{
-	return q_linear(s);
 }
 
 static void print_state(struct state *s)
