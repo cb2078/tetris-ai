@@ -16,11 +16,24 @@
 #define unreachable() crash()
 #define assert(cond) if (cond) ; else { printf("assert at %s:%d\n", __FILE__, __LINE__); unreachable(); }
 
+static float randf(void)
+{
+	return (float)rand() / RAND_MAX;
+}
+
+static float randn(void)
+{
+	float result = 0;
+	for (int i = 0; i < 12; ++i)
+		result += randf();
+	return result - 6;
+}
+
 #include "board.c"
 #include "adt.c"
 #include "tetris.c"
-#include "search.c"
 #include "draw.c"
+#include "search.c"
 #include "test.c"
 
 int inputs[HEIGHT * 48];
@@ -29,7 +42,7 @@ board_t board_expected;
 static void find_inputs(struct state *state)
 {
 	struct state states[STATE_COUNT];
-	struct state *next = search(state, states, SEARCH_DEPTH);
+	struct state *next = search(weights, state, states, SEARCH_DEPTH);
 	memcpy(board_expected, next->board, sizeof(board_t));
 
 	memset(inputs, 0, sizeof(inputs));
@@ -55,7 +68,7 @@ static void find_inputs(struct state *state)
 	}
 }
 
-static void run_model(void)
+static void view_model(void)
 {
 	InitWindow(800, 600, "tetris ai");
 	SetTargetFPS(60);
@@ -90,19 +103,7 @@ static void run_model(void)
 
 int main(void)
 {
-	InitWindow(800, 600, "tetris ai");
-	SetTargetFPS(60);
-
-	static struct state states[EPISODE_LENGTH];
-	float rewards[EPISODE_LENGTH];
-	unsigned length;
-	for (int i = 0; i < 100; ++i) {
-		generate_episode(states, rewards, &length);
-		v_update(states, rewards, length);
-		for (int j = 0; j < NUM_WEIGHTS; ++j)
-			printf("%d:% f ", j, weights[j]);
-		if (length)
-			printf("-- %3d %f\n", length, (float)states[length - 1].points / length);
-	}
+	improve();
+	view_model();
 	return 0;
 }
