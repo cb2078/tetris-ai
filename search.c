@@ -48,7 +48,7 @@ static inline float eval(struct state *s)
 static void print_state(struct state *s)
 {
 	printf("level: %d, lines: %d, shape: %d\n", s->level, s->lines, s->shape);
-	printf("x: %d, y: %d, r: %d\n", s->last_placement.x, s->last_placement.y, s->last_placement.r);
+	printf("x: %d, y: %d, r: %d\n", s->x, s->y, s->r);
 	print_board(s->board);
 }
 
@@ -94,11 +94,6 @@ static void expand(struct state *state, struct state states[STATE_COUNT], unsign
 				// do a "soft drop"
 				while (!(WRITE & tick(&next, 0)));
 lock:
-				// update the last placement
-				next.last_placement.x = next.x;
-				next.last_placement.y = next.y;
-				next.last_placement.r = next.r;
-
 				states[(*length)++] = next;
 			}
 	}

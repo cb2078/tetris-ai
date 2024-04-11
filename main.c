@@ -35,16 +35,16 @@ static void find_inputs(struct state *state)
 	memset(inputs, 0, sizeof(inputs));
 	// NOTE this won't work with tucks
 	int x = 3, r = 0;
-	int dx = next->last_placement.x > x ? 1 : next->last_placement.x < x ? -1 : 0;
-	int dr = next->last_placement.r == 0 ? 0 : next->last_placement.r == 3 ? -1 : 1;
+	int dx = next->x > x ? 1 : next->x < x ? -1 : 0;
+	int dr = next->r == 0 ? 0 : next->r == 3 ? -1 : 1;
 	for (int frame = 0;; frame += 2) {
 		bool flag = false;
-		if (x != next->last_placement.x) {
+		if (x != next->x) {
 			flag = true;
 			inputs[frame] |= get_dir_x(dx);
 			x += dx;
 		}
-		if (r != next->last_placement.r) {
+		if (r != next->r) {
 			flag = true;
 			inputs[frame] |= get_dir_r(dr);
 			r += dr + 4;

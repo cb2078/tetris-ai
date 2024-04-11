@@ -5,7 +5,6 @@ struct state {
 	int level;
 	int lines, points;
 	int shape, next_shape;
-	struct { int x, y, r; } last_placement;
 
 	int x, y, r;
 	int frames;
