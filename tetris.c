@@ -13,6 +13,13 @@ struct state {
 	int shape_queue_i;
 };
 
+static void print_state(struct state *s)
+{
+	printf("level: %d, lines: %d, shape: %d\n", s->level, s->lines, s->shape);
+	printf("x: %d, y: %d, r: %d\n", s->x, s->y, s->r);
+	print_board(s->board);
+}
+
 static int points_per_line[] = {0, 40, 100, 300, 1200};
 
 static unsigned short random_int(void)

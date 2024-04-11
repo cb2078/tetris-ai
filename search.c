@@ -10,21 +10,12 @@ static float ITERATIONS = 10000;
 
 static float weights[3] = {0.45f, 0.45f, 0.10f};
 
-static void normalize_weights(void);
-
 static float eval(struct state *s)
 {
 	return
 		weights[0] * board_height(s->board) +
 		weights[1] * board_holes(s->board) +
 		weights[2] * board_variance(s->board);
-}
-
-static void print_state(struct state *s)
-{
-	printf("level: %d, lines: %d, shape: %d\n", s->level, s->lines, s->shape);
-	printf("x: %d, y: %d, r: %d\n", s->x, s->y, s->r);
-	print_board(s->board);
 }
 
 #define HASH(x, r) ((x) + 4 | (r) << 4)
@@ -94,37 +85,4 @@ static struct state *search(struct state *state, struct state states[STATE_COUNT
 		}
 	}
 	return arg_min == -1 ? NULL : &states[arg_min];
-}
-
-static struct state *state_min_q(struct state *state, struct state states[STATE_COUNT])
-{
-	return search(state, states, SEARCH_DEPTH);
-}
-
-static struct state *select_epsilon_greedy(struct state *state, struct state states[STATE_COUNT])
-{
-	unsigned length;
-	expand(state, states, &length);
-	if ((float)rand() / RAND_MAX < EPSILON)
-		return &states[rand() * length / RAND_MAX];
-	return state_min_q(state, states);
-}
-
-static struct state *select_epsilon_decreasing(struct state *state, struct state states[STATE_COUNT]);
-
-static void q_learning(void)
-{
-	for (int i = 0; i < ITERATIONS; ++i) {
-		struct state state = { .lines = 19, };
-		struct state states[STATE_COUNT];
-		for (;;) {
-			struct state *new_state = select_epsilon_greedy(&state, states);
-			if (!new_state)
-				break;
-			float reward = (float)points_per_line[new_state->lines];
-			float delta = reward + GAMMA * q_linear(new_state) - q_linear(&state);
-			q_linear_update(delta, new_state);
-			memcpy(&state, new_state, sizeof(struct state));
-		}
-	}
 }

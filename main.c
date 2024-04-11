@@ -16,7 +16,7 @@
 #define unreachable() crash()
 #define assert(cond) if (cond) ; else { printf("assert at %s:%d\n", __FILE__, __LINE__); unreachable(); }
 
-#include "bitboard.c"
+#include "board.c"
 #include "adt.c"
 #include "tetris.c"
 #include "search.c"
@@ -90,7 +90,19 @@ static void run_model(void)
 
 int main(void)
 {
-	test_board();
-	run_model();
+	InitWindow(800, 600, "tetris ai");
+	SetTargetFPS(60);
+
+	static struct state states[EPISODE_LENGTH];
+	float rewards[EPISODE_LENGTH];
+	unsigned length;
+	for (int i = 0; i < 100; ++i) {
+		generate_episode(states, rewards, &length);
+		v_update(states, rewards, length);
+		for (int j = 0; j < NUM_WEIGHTS; ++j)
+			printf("%d:% f ", j, weights[j]);
+		if (length)
+			printf("-- %3d %f\n", length, (float)states[length - 1].points / length);
+	}
 	return 0;
 }
