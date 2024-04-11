@@ -55,10 +55,8 @@ static void find_inputs(struct state *state)
 	}
 }
 
-int main(void)
+static void run_model(void)
 {
-	test_board();
-
 	InitWindow(800, 600, "tetris ai");
 	SetTargetFPS(60);
 
@@ -88,5 +86,11 @@ int main(void)
 		}
 		draw(&state);
 	}
+}
+
+int main(void)
+{
+	test_board();
+	run_model();
 	return 0;
 }
