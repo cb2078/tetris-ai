@@ -125,6 +125,7 @@ struct es_agent_arg {
 	struct work_queue queue;
 	float (*N)[WEIGHT_COUNT];
 	float *R;
+	unsigned short seed;
 };
 
 int es_agent_parallel(void *x)
@@ -152,7 +153,7 @@ static void es_iteration(void)
 #if 1
 	struct es_agent_arg arg = {
 		.queue = { .count = POPULATION },
-		.N = N, .R = R,
+		.N = N, .R = R, .seed = (unsigned short)rand(),
 	};
 	run_jobs(es_agent_parallel, (void *)&arg);
 #else

@@ -16,3 +16,10 @@ struct work_queue {
 	volatile int next;
 	volatile int count;
 };
+
+static atomic_int thread_rand(void)
+{
+	static _Atomic unsigned seed = 314159;
+	seed = (75 * seed + 74) % (1 << 16 + 1);
+	return seed;
+}

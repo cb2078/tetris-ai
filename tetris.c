@@ -22,28 +22,26 @@ static void print_state(struct state *s)
 
 static int points_per_line[] = {0, 40, 100, 300, 1200};
 
-static unsigned short random_int(void)
+static unsigned short random_int(unsigned short *rng)
 {
-	static thread_local unsigned short seed = 2;
-	unsigned short x = 1 & seed >> 9;
-	unsigned short y = 1 & seed >> 1;
+	unsigned short x = 1 & *rng >> 9;
+	unsigned short y = 1 & *rng >> 1;
 	unsigned short left = x ^ y;
-	seed = left << 15 | seed >> 1;
-	return seed;
+	return *rng = left << 15 | *rng >> 1;;
 }
 
-static int random_shape(void)
+static int random_shape(unsigned short *rng)
 {
 	static thread_local int last = -1;
 	static thread_local int shapes = 0;
 	static thread_local int spawn_id[N_SHAPES] = {0x12, 0x0a, 0x0b, 0x08, 0x07, 0x0e, 0x02};
 
-	unsigned char i = random_int() >> 8;
+	unsigned char i = random_int(rng) >> 8;
 	i += (unsigned char)++shapes;
 	i &= 7;
-	if (7 == i || i == last)
+	if (7 == i || i == (unsigned char)last)
 	{
-		i = random_int() >> 8;
+		i = random_int(rng) >> 8;
 		i &= 7;
 		i += (unsigned char)last;
 		i %= 7;
@@ -93,8 +91,9 @@ static bool move(struct state *s, int dx, int dy, int dr)
 
 static void init(struct state *s)
 {
+	unsigned short seed = (unsigned short)thread_rand();
 	for (int i = 0; i < 20000; ++i)
-		shape_queue[i] = (char)random_shape();
+		shape_queue[i] = (char)random_shape(&seed);
 	s->next_shape = shape_queue[0];
 	spawn_shape(s);
 }
