@@ -104,6 +104,6 @@ static void view_model(void)
 int main(void)
 {
 	improve();
-	view_model();
+	// view_model();
 	return 0;
 }

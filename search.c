@@ -124,16 +124,24 @@ static void es_iteration(void)
 	float R[POPULATION];
 
 	int best = 0;
+	float avg = 0;
 	for (int i = 0; i < POPULATION; ++i) {
-		printf("%d ", i);
+		fprintf(stderr, ".");
 		float w[WEIGHT_COUNT];
 		for (int j = 0; j < WEIGHT_COUNT; ++j)
 			w[j] = weights[j] + SIGMA * N[i][j];
 		R[i] = (float)run(w);
+	}
+	for (int i = 0; i < POPULATION; ++i) {
 		if ((int)R[i] > best)
 			best = (int)R[i];
+		avg += R[i] / POPULATION;
 	}
-	putchar('\t');
+	printf("\t{'avg': %3.1f, 'best': %d, weights: [", avg, best);
+	for (int j = 0; j < WEIGHT_COUNT; ++j)
+		printf("%s%1.3f", j ? ", " : "", weights[j]);
+	printf("]},\n");
+	fprintf(stderr, " avg %4.3f\n", avg);
 
 	float R_mean = 0;
 	for (int i = 0; i < POPULATION; ++i)
@@ -158,14 +166,14 @@ static void es_iteration(void)
 			dots[j] += N[i][j] * A[i];
 	for (int j = 0; j < WEIGHT_COUNT; ++j)
 		weights[j] = weights[j] + ALPHA / (POPULATION * SIGMA) * dots[j];
-
-	for (int j = 0; j < WEIGHT_COUNT; ++j)
-		printf("% f ", weights[j]);
-	printf("\tbest: %d\n", best);
 }
 
 static void improve()
 {
-	for (int i = 0; i < ITERATIONS; ++i)
+	printf("[\n");
+	for (int i = 0; i < EPOCHS; ++i) {
+		fprintf(stderr, "epoch %3d", i);
 		es_iteration();
+	}
+	printf("]\n");
 }
