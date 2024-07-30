@@ -15,6 +15,7 @@ fig, (ax1, ax2) = plt.subplots(2, 1, sharex = True)
 colours = 'red', 'orange', 'gold', 'brown'
 ax1.set_ylabel('weights')
 for i in range(num_weights): ax1.plot(weights[i], color=colours[i], label='weight' + str(i))
+ax1.legend()
 
 colour = 'blue'
 ax2.set_xlabel('epoch')
