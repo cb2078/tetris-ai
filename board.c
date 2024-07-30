@@ -1,5 +1,3 @@
-#define BOARD
-
 enum shape_type {
 	SHAPE_I,
 	SHAPE_O,
@@ -279,18 +277,35 @@ static int board_holes(board_t board)
 static int board_row_transitions(board_t board)
 {
 	int result = 0;
-	for (int i = 0; i < HEIGHT; ++i)
+	for (int i = 0; i < HEIGHT; ++i) {
+		int row = 0;
 		for (int j = 0; j < WIDTH - 1; ++j)
-			result += board[i][j] && !board[i][j + 1];
+			row += !board[i][j] != !board[i][j + 1];
+		if (row)
+			result += row + !board[i][0] + !board[i][WIDTH - 1];
+	}
 	return result;
 }
 
 static int board_col_transitions(board_t board)
 {
 	int result = 0;
-	for (int i = 0; i < HEIGHT - 1; ++i)
-		for (int j = 0; j < WIDTH; ++j)
-			result += board[i][j] & !board[i + 1][j];
+	for (int j = 0; j < WIDTH; ++j) {
+		int col = 0;
+		for (int i = 0; i < HEIGHT - 1; ++i)
+			col += !board[i][j] != !board[i + 1][j];
+		if (col)
+			result += col - !board[0][j]; // ignore the top one
+	}
+	return result;
+}
+
+static int board_col_holes(board_t board)
+{
+	int result = 0;
+	for (int j = 0; j < WIDTH; ++j)
+		for (int i = 0; i < HEIGHT - 1; ++i)
+			result += board[i][j] && !board[i + 1][j];
 	return result;
 }
 
@@ -307,13 +322,11 @@ static int board_well_depth(board_t board, int j)
 {
 	int count = 0;
 	for (int i = 0; i < HEIGHT; ++i) {
-		if ((j > 0 && board[i][j - 1] != 0) &&
-		    (j < WIDTH - 1 && board[i][j + 1] != 0)) {
-			if (board[i][j] != 0)
-				break;
-			else
-				++count;
-		}
+		if (i == HEIGHT || board[i][j])
+			break;
+		else if ((j == 0 || board[i][j - 1]) &&
+		         (j == WIDTH - 1 || board[i][j + 1]))
+			++count;
 		else
 			count = 0;
 	}
@@ -322,15 +335,10 @@ static int board_well_depth(board_t board, int j)
 
 static int board_wells(board_t board)
 {
-	int max_depth = 0;
-	int total_depth = 0;
-	for (int j = 0; j < WIDTH; ++j) {
-		int depth = board_well_depth(board, j);
-		if (depth > max_depth)
-			max_depth = depth;
-		total_depth += depth;
-	}
-	return total_depth - max_depth;
+	int result = 0;
+	for (int j = 0; j < WIDTH; ++j)
+		result += board_well_depth(board, j);;
+	return result;
 }
 
 static int board_cell_count(board_t board)
@@ -394,4 +402,11 @@ static int write(board_t board, int shape, int x, int y, int r)
 				board[y + i][x + j] = cell;
 		}
 	return clear(board);
+}
+
+static void read_board(board_t board, char s[HEIGHT][WIDTH])
+{
+	for (int i = 0; i < HEIGHT; ++i)
+		for (int j = 0; j < WIDTH; ++j)
+			board[i][j] = s[i][j] != ' ';
 }
