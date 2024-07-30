@@ -99,7 +99,7 @@ static int run(float weights[WEIGHT_COUNT])
 {
 	int result = 0;
 	for (int i = 0; i < SAMPLES; ++i) {
-		struct state *s0 = &(struct state){ .level = 30, }; init(s0);
+		struct state *s0 = &(struct state){ .level = 18, }; init(s0);
 		for (;;) {
 			// if (s0->lines > 10000)
 			if (s0->level > 40)
