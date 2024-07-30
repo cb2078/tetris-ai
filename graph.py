@@ -12,7 +12,7 @@ lines = [[sorted(e['lines'])[i] for e in d] for i in range(population)]
 fig, (ax1, ax2) = plt.subplots(2, 1, sharex = True)
 # fig.subplots_adjust(hspace = 0)
 
-colours = 'red', 'orange', 'gold', 'brown'
+colours = [(1, 0, 1, 1 - i / num_weights / 2) for i in range(num_weights)]
 ax1.set_ylabel('weights')
 for i in range(num_weights): ax1.plot(weights[i], color=colours[i], label='weight' + str(i))
 ax1.legend()
