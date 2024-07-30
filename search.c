@@ -3,24 +3,26 @@
 #define SEARCH_DEPTH 2
 #define STATE_COUNT QUEUE_SIZE
 
-#define POPULATION 50
-static int ITERATIONS = 300;
+#define POPULATION 40
+#define SAMPLES 1
+#define EPOCHS 45
 
-static float ALPHA = 0.001f;
-static float EPSILON = 0.001f;
-static float GAMMA = 0.9f;
+static float ALPHA = 0.005f;
+static float EPSILON = 0.01f; // not used
+static float GAMMA = 0.9f; // not used
 static float SIGMA = 0.1f;
 
-#define WEIGHT_COUNT 3
-// {0.164264f, 0.288453f, 0.111142f} learned from ES
-static float weights[WEIGHT_COUNT] = { [0] = 1, };
+#define WEIGHT_COUNT 4
+// static float weights[WEIGHT_COUNT] = {0};
+static float weights[WEIGHT_COUNT] = {0.129f, 0.480f, 0.185f, 0.261f};
 
 static float eval(float weights[WEIGHT_COUNT], struct state *s)
 {
 	return
 		weights[0] * board_height(s->board) +
 		weights[1] * board_holes(s->board) +
-		weights[2] * board_variance(s->board);
+		weights[2] * board_variance(s->board) +
+		weights[3] * board_cell_count(s->board);
 }
 
 #define HASH(x, r) ((x) + 4 | (r) << 4)
@@ -96,10 +98,11 @@ search(float weights[WEIGHT_COUNT], struct state *state, struct state states[STA
 static int run(float weights[WEIGHT_COUNT])
 {
 	int result = 0;
-	for (int i = 0; i < 5; ++i) {
+	for (int i = 0; i < SAMPLES; ++i) {
 		struct state *s0 = &(struct state){ .level = 30, }; init(s0);
 		for (;;) {
-			if (s0->lines > 1000)
+			// if (s0->lines > 10000)
+			if (s0->level > 40)
 				break;
 			// draw(s0);
 			struct state states[STATE_COUNT];
@@ -108,9 +111,14 @@ static int run(float weights[WEIGHT_COUNT])
 				break;
 			memcpy(s0, s1, sizeof(struct state));
 		}
+#if 0
 		result += s0->lines;
+#else
+		result += s0->points;
+#endif
 	}
-	return result / 5;
+	return result / SAMPLES;
+}
 
 void es_agent(float N[POPULATION][WEIGHT_COUNT], float R[POPULATION], int i)
 {
