@@ -3,8 +3,9 @@ unsigned char shape_queue[20000];
 struct state {
 	board_t board;
 	int level;
-	int lines, points;
+	int lines, lines_cleared, points;
 	int shape, next_shape;
+	int lock_height;
 
 	int x, y, r;
 	int frames;
@@ -74,9 +75,10 @@ static bool move(struct state *s, int dx, int dy, int dr)
 {
 	if (collides(s->board, s->shape, s->x + dx, s->y + dy, (s->r + dr + 4) % 4)) {
 		if (dy) {
-			int lines = write(s->board, s->shape, s->x, s->y, s->r);
-			s->points += (1 + s->level) * points_per_line[lines];
-			s->lines += lines;
+			s->lock_height = s->y;
+			s->lines_cleared = write(s->board, s->shape, s->x, s->y, s->r);
+			s->points += (1 + s->level) * points_per_line[s->lines_cleared];
+			s->lines += s->lines_cleared;
 			inc_level(s);
 			s->spawn = true;
 		}
