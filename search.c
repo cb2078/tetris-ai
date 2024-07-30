@@ -111,6 +111,32 @@ static int run(float weights[WEIGHT_COUNT])
 		result += s0->lines;
 	}
 	return result / 5;
+
+void es_agent(float N[POPULATION][WEIGHT_COUNT], float R[POPULATION], int i)
+{
+	float w[WEIGHT_COUNT];
+	for (int j = 0; j < WEIGHT_COUNT; ++j)
+		w[j] = weights[j] + SIGMA * N[i][j];
+	R[i] = (float)run(w);
+	fprintf(stderr, ".");
+}
+
+struct es_agent_arg {
+	struct work_queue queue;
+	float (*N)[WEIGHT_COUNT];
+	float *R;
+};
+
+int es_agent_parallel(void *x)
+{
+	struct es_agent_arg *arg = (struct es_agent_arg *)x;
+	while (arg->queue.next < arg->queue.count) {
+		int i = atomic_fetch_add(&(_Atomic int)arg->queue.next, 1);
+		assert(i < arg->queue.next);
+
+		es_agent(arg->N, arg->R, i);
+	}
+	return 0;
 }
 
 // do 1 iteration
@@ -123,25 +149,27 @@ static void es_iteration(void)
 			N[i][j] = randn();
 	float R[POPULATION];
 
-	int best = 0;
+#if 1
+	struct es_agent_arg arg = {
+		.queue = { .count = POPULATION },
+		.N = N, .R = R,
+	};
+	run_jobs(es_agent_parallel, (void *)&arg);
+#else
+	for (int i = 0; i < POPULATION; ++i)
+		es_agent(N, R, i);
+#endif
+	printf("\t{'lines': [");
 	float avg = 0;
 	for (int i = 0; i < POPULATION; ++i) {
-		fprintf(stderr, ".");
-		float w[WEIGHT_COUNT];
-		for (int j = 0; j < WEIGHT_COUNT; ++j)
-			w[j] = weights[j] + SIGMA * N[i][j];
-		R[i] = (float)run(w);
-	}
-	for (int i = 0; i < POPULATION; ++i) {
-		if ((int)R[i] > best)
-			best = (int)R[i];
 		avg += R[i] / POPULATION;
+		printf("%s%4d", i ? ", " : "", (int)R[i]);
 	}
-	printf("\t{'avg': %3.1f, 'best': %d, weights: [", avg, best);
+	printf("], 'weights': [");
 	for (int j = 0; j < WEIGHT_COUNT; ++j)
 		printf("%s%1.3f", j ? ", " : "", weights[j]);
 	printf("]},\n");
-	fprintf(stderr, " avg %4.3f\n", avg);
+	fprintf(stderr, " avg %4.1f\n", avg);
 
 	float R_mean = 0;
 	for (int i = 0; i < POPULATION; ++i)

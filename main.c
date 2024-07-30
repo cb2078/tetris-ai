@@ -29,6 +29,7 @@ static float randn(void)
 	return result - 6;
 }
 
+#include "thread.c"
 #include "board.c"
 #include "adt.c"
 #include "tetris.c"

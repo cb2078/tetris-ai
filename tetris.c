@@ -24,7 +24,7 @@ static int points_per_line[] = {0, 40, 100, 300, 1200};
 
 static unsigned short random_int(void)
 {
-	static unsigned short seed = 2;
+	static thread_local unsigned short seed = 2;
 	unsigned short x = 1 & seed >> 9;
 	unsigned short y = 1 & seed >> 1;
 	unsigned short left = x ^ y;
@@ -34,9 +34,9 @@ static unsigned short random_int(void)
 
 static int random_shape(void)
 {
-	static int last = -1;
-	static int shapes = 0;
-	static int spawn_id[N_SHAPES] = {0x12, 0x0a, 0x0b, 0x08, 0x07, 0x0e, 0x02};
+	static thread_local int last = -1;
+	static thread_local int shapes = 0;
+	static thread_local int spawn_id[N_SHAPES] = {0x12, 0x0a, 0x0b, 0x08, 0x07, 0x0e, 0x02};
 
 	unsigned char i = random_int() >> 8;
 	i += (unsigned char)++shapes;
